@@ -157,6 +157,12 @@ git checkout main
 git merge upstream/main
 ```
 
+### 项目信息
+
+- **Fork版本**: [tellerlin/claude-code-router](https://github.com/tellerlin/claude-code-router)
+- **原始版本**: [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router)
+- **主要改进**: 新增API Key轮询功能
+
 2. **功能隔离**
 - 轮询功能封装在独立模块中
 - 使用配置开关控制功能启用
