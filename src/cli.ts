@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { run } from "./index";
-import { showStatus } from "./utils/status";
+import { showStatus, showDetailedRotationStatus } from "./utils/status";
 import { executeCodeCommand } from "./utils/codeCommand";
 import { cleanupPidFile, isServiceRunning } from "./utils/processCheck";
 import { version } from "../package.json";
@@ -18,6 +18,7 @@ Commands:
   start         Start service 
   stop          Stop service
   status        Show service status
+  rotation      Show API key rotation status
   code          Execute code command
   -v, version   Show version information
   -h, help      Show help information
@@ -25,6 +26,7 @@ Commands:
 Example:
   ccr start
   ccr code "Write a Hello World"
+  ccr rotation  # Show detailed API key rotation status
 `;
 
 async function waitForService(
@@ -75,6 +77,9 @@ async function main() {
       break;
     case "status":
       showStatus();
+      break;
+    case "rotation":
+      showDetailedRotationStatus();
       break;
     case "code":
       if (!isServiceRunning()) {

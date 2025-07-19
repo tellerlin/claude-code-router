@@ -6,6 +6,7 @@ import {
   HOME_DIR,
   PLUGINS_DIR,
 } from "../constants";
+import { processConfig, validateConfig } from "./configProcessor";
 
 const ensureDir = async (dir_path: string) => {
   try {
@@ -45,7 +46,17 @@ const confirm = async (query: string): Promise<boolean> => {
 export const readConfigFile = async () => {
   try {
     const config = await fs.readFile(CONFIG_FILE, "utf-8");
-    return JSON.parse(config);
+    const parsedConfig = JSON.parse(config);
+    
+    // 验证配置
+    const errors = validateConfig(parsedConfig);
+    if (errors.length > 0) {
+      console.error("Configuration validation errors:");
+      errors.forEach(error => console.error(`  - ${error}`));
+      throw new Error("Invalid configuration");
+    }
+    
+    return parsedConfig;
   } catch {
     const name = await question("Enter Provider Name: ");
     const APIKEY = await question("Enter Provider API KEY: ");
@@ -76,6 +87,12 @@ export const writeConfigFile = async (config: any) => {
 
 export const initConfig = async () => {
   const config = await readConfigFile();
+  
+  // 处理配置，初始化API Key轮询系统
+  const processedConfig = processConfig(config);
+  
+  // 将处理后的配置合并到环境变量
   Object.assign(process.env, config);
-  return config;
+  
+  return processedConfig;
 };

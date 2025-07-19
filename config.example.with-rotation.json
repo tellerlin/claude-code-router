@@ -1,0 +1,78 @@
+{
+  "APIKEY": "your-secret-key",
+  "PROXY_URL": "http://127.0.0.1:7890",
+  "LOG": true,
+  "HOST": "0.0.0.0",
+  "Providers": [
+    {
+      "name": "deepseek",
+      "api_base_url": "https://api.deepseek.com/chat/completions",
+      "api_keys": [
+        "sk-xxx1",
+        "sk-xxx2",
+        "sk-xxx3"
+      ],
+      "enable_rotation": true,
+      "rotation_strategy": "round_robin",
+      "retry_on_failure": true,
+      "max_retries": 3,
+      "models": ["deepseek-chat", "deepseek-reasoner"],
+      "transformer": {
+        "use": ["deepseek"],
+        "deepseek-chat": { "use": ["tooluse"] }
+      }
+    },
+    {
+      "name": "openrouter",
+      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+      "api_keys": [
+        {
+          "key": "sk-xxx1",
+          "weight": 2,
+          "maxFailures": 5,
+          "cooldownTime": 60000
+        },
+        {
+          "key": "sk-xxx2",
+          "weight": 1,
+          "maxFailures": 3,
+          "cooldownTime": 30000
+        }
+      ],
+      "enable_rotation": true,
+      "rotation_strategy": "weighted",
+      "retry_on_failure": true,
+      "max_retries": 2,
+      "models": [
+        "google/gemini-2.5-pro-preview",
+        "anthropic/claude-3.5-sonnet"
+      ],
+      "transformer": { "use": ["openrouter"] }
+    },
+    {
+      "name": "gemini",
+      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "api_keys": [
+        "sk-xxx1",
+        "sk-xxx2"
+      ],
+      "enable_rotation": true,
+      "rotation_strategy": "random",
+      "retry_on_failure": false,
+      "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
+      "transformer": { "use": ["gemini"] }
+    },
+    {
+      "name": "ollama",
+      "api_base_url": "http://localhost:11434/v1/chat/completions",
+      "api_key": "ollama",
+      "models": ["qwen2.5-coder:latest"]
+    }
+  ],
+  "Router": {
+    "default": "deepseek,deepseek-chat",
+    "background": "ollama,qwen2.5-coder:latest",
+    "think": "deepseek,deepseek-reasoner",
+    "longContext": "openrouter,google/gemini-2.5-pro-preview"
+  }
+} 

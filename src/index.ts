@@ -46,10 +46,10 @@ async function run(options: RunOptions = {}) {
 
   await initializeClaudeConfig();
   await initDir();
-  const config = await initConfig();
-  let HOST = config.HOST;
+  const processedConfig = await initConfig();
+  let HOST = processedConfig.global.HOST;
 
-  if (config.HOST && !config.APIKEY) {
+  if (processedConfig.global.HOST && !processedConfig.global.APIKEY) {
     HOST = "127.0.0.1";
     console.warn(
       "⚠️ API key is not set. HOST is forced to 127.0.0.1."
@@ -82,8 +82,7 @@ async function run(options: RunOptions = {}) {
   const server = createServer({
     jsonPath: CONFIG_FILE,
     initialConfig: {
-      // ...config,
-      providers: config.Providers || config.providers,
+      providers: processedConfig.providers,
       HOST: HOST,
       PORT: servicePort,
       LOG_FILE: join(
@@ -93,9 +92,9 @@ async function run(options: RunOptions = {}) {
       ),
     },
   });
-  server.addHook("preHandler", apiKeyAuth(config));
+  server.addHook("preHandler", apiKeyAuth(processedConfig.global));
   server.addHook("preHandler", async (req, reply) =>
-    router(req, reply, config)
+    router(req, reply, processedConfig)
   );
   server.start();
 }
