@@ -93,7 +93,7 @@ cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jso
 cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jsonc ~/.claude-code-router/config.json
 ```
 
-此模板默认注释掉了所有模型。要启用某个模型，只需删除该模型行开头的 `//` 注释即可。
+此模板默认注释掉了所有提供商，仅启用Gemini作为示例。要启用某个提供商，只需删除该提供商配置块中每行开头的 `//` 注释即可。
 
 **替代方法（如果上面的方法不工作）：**
 ```bash

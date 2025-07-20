@@ -7,59 +7,59 @@
   
   // Provider Configuration / 提供商配置
   "Providers": [
-    {
-      // DeepSeek Provider Configuration / DeepSeek 提供商配置
-      "name": "deepseek",
-      "api_base_url": "https://api.deepseek.com/chat/completions",
-      "api_keys": [
-        "sk-xxx1",  // Replace with your DeepSeek API key / 替换为您的DeepSeek API密钥
-        "sk-xxx2",  // You can add multiple keys for rotation / 可以添加多个密钥进行轮询
-        "sk-xxx3"
-      ],
-      "enable_rotation": true,  // Enable API key rotation / 启用API密钥轮询
-      "rotation_strategy": "round_robin",  // Rotation strategy: round_robin, random, weighted, least_used / 轮询策略
-      "retry_on_failure": true,  // Retry on failure / 失败时重试
-      "max_retries": 3,  // Maximum retry attempts / 最大重试次数
-      "models": [
-        // "deepseek-chat",  // Remove comment to enable this model / 删除注释以启用此模型
-        // "deepseek-reasoner"  // Remove comment to enable this model / 删除注释以启用此模型
-      ],
-      "transformer": {
-        "use": ["deepseek"],
-        "deepseek-chat": { "use": ["tooluse"] }
-      }
-    },
+    // {
+    //   // DeepSeek Provider Configuration / DeepSeek 提供商配置
+    //   "name": "deepseek",
+    //   "api_base_url": "https://api.deepseek.com/chat/completions",
+    //   "api_keys": [
+    //     "sk-xxx1",  // Replace with your DeepSeek API key / 替换为您的DeepSeek API密钥
+    //     "sk-xxx2",  // You can add multiple keys for rotation / 可以添加多个密钥进行轮询
+    //     "sk-xxx3"
+    //   ],
+    //   "enable_rotation": true,  // Enable API key rotation / 启用API密钥轮询
+    //   "rotation_strategy": "round_robin",  // Rotation strategy: round_robin, random, weighted, least_used / 轮询策略
+    //   "retry_on_failure": true,  // Retry on failure / 失败时重试
+    //   "max_retries": 3,  // Maximum retry attempts / 最大重试次数
+    //   "models": [
+    //     "deepseek-chat",  // Remove comment to enable this model / 删除注释以启用此模型
+    //     "deepseek-reasoner"  // Remove comment to enable this model / 删除注释以启用此模型
+    //   ],
+    //   "transformer": {
+    //     "use": ["deepseek"],
+    //     "deepseek-chat": { "use": ["tooluse"] }
+    //   }
+    // },
     
-    {
-      // OpenRouter Provider Configuration (supports multiple models) / OpenRouter 提供商配置（支持多种模型）
-      "name": "openrouter",
-      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-      "api_keys": [
-        {
-          "key": "sk-xxx1",  // Replace with your OpenRouter API key / 替换为您的OpenRouter API密钥
-          "weight": 2,  // Weight (for weighted strategy) / 权重（用于weighted策略）
-          "maxFailures": 5,  // Maximum failures / 最大失败次数
-          "cooldownTime": 60000  // Cooldown time (milliseconds) / 冷却时间（毫秒）
-        },
-        {
-          "key": "sk-xxx2",
-          "weight": 1,
-          "maxFailures": 3,
-          "cooldownTime": 30000
-        }
-      ],
-      "enable_rotation": true,
-      "rotation_strategy": "weighted",  // Weighted rotation / 加权轮询
-      "retry_on_failure": true,
-      "max_retries": 2,
-      "models": [
-        // "google/gemini-2.5-pro-preview",  // Remove comment to enable Gemini Pro / 删除注释以启用Gemini Pro
-        // "anthropic/claude-3.5-sonnet",  // Remove comment to enable Claude 3.5 / 删除注释以启用Claude 3.5
-        // "meta-llama/llama-3.1-8b-instruct",  // Remove comment to enable Llama 3.1 / 删除注释以启用Llama 3.1
-        // "openai/gpt-4o-mini"  // Remove comment to enable GPT-4o Mini / 删除注释以启用GPT-4o Mini
-      ],
-      "transformer": { "use": ["openrouter"] }
-    },
+    // {
+    //   // OpenRouter Provider Configuration (supports multiple models) / OpenRouter 提供商配置（支持多种模型）
+    //   "name": "openrouter",
+    //   "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+    //   "api_keys": [
+    //     {
+    //       "key": "sk-xxx1",  // Replace with your OpenRouter API key / 替换为您的OpenRouter API密钥
+    //       "weight": 2,  // Weight (for weighted strategy) / 权重（用于weighted策略）
+    //       "maxFailures": 5,  // Maximum failures / 最大失败次数
+    //       "cooldownTime": 60000  // Cooldown time (milliseconds) / 冷却时间（毫秒）
+    //     },
+    //     {
+    //       "key": "sk-xxx2",
+    //       "weight": 1,
+    //       "maxFailures": 3,
+    //       "cooldownTime": 30000
+    //     }
+    //   ],
+    //   "enable_rotation": true,
+    //   "rotation_strategy": "weighted",  // Weighted rotation / 加权轮询
+    //   "retry_on_failure": true,
+    //   "max_retries": 2,
+    //   "models": [
+    //     "google/gemini-2.5-pro-preview",  // Remove comment to enable Gemini Pro / 删除注释以启用Gemini Pro
+    //     "anthropic/claude-3.5-sonnet",  // Remove comment to enable Claude 3.5 / 删除注释以启用Claude 3.5
+    //     "meta-llama/llama-3.1-8b-instruct",  // Remove comment to enable Llama 3.1 / 删除注释以启用Llama 3.1
+    //     "openai/gpt-4o-mini"  // Remove comment to enable GPT-4o Mini / 删除注释以启用GPT-4o Mini
+    //   ],
+    //   "transformer": { "use": ["openrouter"] }
+    // },
     
     {
       // Google Gemini Provider Configuration / Google Gemini 提供商配置
@@ -77,19 +77,19 @@
         "gemini-2.5-pro"     // Remove comment to enable Gemini Pro (high quality) / 删除注释以启用Gemini Pro（高质量）
       ],
       "transformer": { "use": ["gemini"] }
-    },
-    
-    {
-      // Ollama Local Model Configuration / Ollama 本地模型配置
-      "name": "ollama",
-      "api_base_url": "http://localhost:11434/v1/chat/completions",
-      "api_key": "ollama",  // Ollama doesn't need real API key / Ollama不需要真实API密钥
-      "models": [
-        // "qwen2.5-coder:latest",  // Remove comment to enable Qwen Coder / 删除注释以启用Qwen Coder
-        // "codellama:latest",      // Remove comment to enable Code Llama / 删除注释以启用Code Llama
-        // "llama3.2:latest"        // Remove comment to enable Llama 3.2 / 删除注释以启用Llama 3.2
-      ]
     }
+    
+    // {
+    //   // Ollama Local Model Configuration / Ollama 本地模型配置
+    //   "name": "ollama",
+    //   "api_base_url": "http://localhost:11434/v1/chat/completions",
+    //   "api_key": "ollama",  // Ollama doesn't need real API key / Ollama不需要真实API密钥
+    //   "models": [
+    //     "qwen2.5-coder:latest",  // Remove comment to enable Qwen Coder / 删除注释以启用Qwen Coder
+    //     "codellama:latest",      // Remove comment to enable Code Llama / 删除注释以启用Code Llama
+    //     "llama3.2:latest"        // Remove comment to enable Llama 3.2 / 删除注释以启用Llama 3.2
+    //   ]
+    // }
   ],
   
   // Router Rules Configuration / 路由规则配置

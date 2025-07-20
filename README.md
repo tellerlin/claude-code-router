@@ -95,7 +95,7 @@ cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jso
 cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jsonc ~/.claude-code-router/config.json
 ```
 
-This template has all models commented out by default. To enable a model, simply remove the `//` comment from the beginning of the model line.
+This template has all providers commented out by default, with only Gemini enabled as an example. To enable a provider, simply remove the `//` comments from the beginning of each line in that provider's configuration block.
 
 **Alternative method (if the above doesn't work):**
 ```bash
