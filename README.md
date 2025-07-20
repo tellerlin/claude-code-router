@@ -57,13 +57,24 @@ npm install -g @tellerlin/claude-code-router
 
 ### 2. Configuration
 
-#### Step 1: Create Configuration Directory
+#### Step 1: Quick Setup (Recommended)
+```bash
+# Use the automatic setup command
+ccr-setup
+```
+
+This will automatically create the configuration directory and copy the template file.
+
+#### Step 2: Manual Setup (Alternative)
+If you prefer manual setup:
+
+**Create Configuration Directory**
 ```bash
 # Create the configuration directory
 mkdir -p ~/.claude-code-router
 ```
 
-#### Step 2: Copy Configuration Template
+**Copy Configuration Template**
 Choose one of the following options:
 
 **Option A: Basic Configuration (Single API Key)**
