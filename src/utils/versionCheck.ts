@@ -8,7 +8,7 @@ const VERSION_FILE = path.join(os.homedir(), '.claude-code-router', '.version-ch
 
 export function getCurrentVersion(): string {
   // Use a simple version string instead of reading package.json
-  return '1.0.29';
+  return '1.0.30';
 }
 
 export function getLatestVersion(): string | null {

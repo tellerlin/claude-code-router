@@ -1,28 +1,27 @@
 {
-  // Basic Configuration / 基础配置
-  "APIKEY": "your-secret-key",  // Your API key / 您的API密钥
-  "PROXY_URL": "http://127.0.0.1:7890",  // Proxy server address (optional) / 代理服务器地址（可选）
-  "LOG": true,  // Enable logging / 是否启用日志
-  "HOST": "0.0.0.0",  // Service listening address / 服务监听地址
+  // Basic Configuration
+  "APIKEY": "your-secret-key",
+  "PROXY_URL": "http://127.0.0.1:7890",
+  "LOG": true,
+  "HOST": "0.0.0.0",
   
-  // Provider Configuration / 提供商配置
+  // Provider Configuration
   "Providers": [
     // {
-    //   // DeepSeek Provider Configuration / DeepSeek 提供商配置
     //   "name": "deepseek",
     //   "api_base_url": "https://api.deepseek.com/chat/completions",
     //   "api_keys": [
-    //     "sk-xxx1",  // Replace with your DeepSeek API key / 替换为您的DeepSeek API密钥
-    //     "sk-xxx2",  // You can add multiple keys for rotation / 可以添加多个密钥进行轮询
+    //     "sk-xxx1",
+    //     "sk-xxx2",
     //     "sk-xxx3"
     //   ],
-    //   "enable_rotation": true,  // Enable API key rotation / 启用API密钥轮询
-    //   "rotation_strategy": "round_robin",  // Rotation strategy: round_robin, random, weighted, least_used / 轮询策略
-    //   "retry_on_failure": true,  // Retry on failure / 失败时重试
-    //   "max_retries": 3,  // Maximum retry attempts / 最大重试次数
+    //   "enable_rotation": true,
+    //   "rotation_strategy": "round_robin",
+    //   "retry_on_failure": true,
+    //   "max_retries": 3,
     //   "models": [
-    //     "deepseek-chat",  // Remove comment to enable this model / 删除注释以启用此模型
-    //     "deepseek-reasoner"  // Remove comment to enable this model / 删除注释以启用此模型
+    //     "deepseek-chat",
+    //     "deepseek-reasoner"
     //   ],
     //   "transformer": {
     //     "use": ["deepseek"],
@@ -31,15 +30,14 @@
     // },
     
     // {
-    //   // OpenRouter Provider Configuration (supports multiple models) / OpenRouter 提供商配置（支持多种模型）
     //   "name": "openrouter",
     //   "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
     //   "api_keys": [
     //     {
-    //       "key": "sk-xxx1",  // Replace with your OpenRouter API key / 替换为您的OpenRouter API密钥
-    //       "weight": 2,  // Weight (for weighted strategy) / 权重（用于weighted策略）
-    //       "maxFailures": 5,  // Maximum failures / 最大失败次数
-    //       "cooldownTime": 60000  // Cooldown time (milliseconds) / 冷却时间（毫秒）
+    //       "key": "sk-xxx1",
+    //       "weight": 2,
+    //       "maxFailures": 5,
+    //       "cooldownTime": 60000
     //     },
     //     {
     //       "key": "sk-xxx2",
@@ -49,61 +47,52 @@
     //     }
     //   ],
     //   "enable_rotation": true,
-    //   "rotation_strategy": "weighted",  // Weighted rotation / 加权轮询
+    //   "rotation_strategy": "weighted",
     //   "retry_on_failure": true,
     //   "max_retries": 2,
     //   "models": [
-    //     "google/gemini-2.5-pro-preview",  // Remove comment to enable Gemini Pro / 删除注释以启用Gemini Pro
-    //     "anthropic/claude-3.5-sonnet",  // Remove comment to enable Claude 3.5 / 删除注释以启用Claude 3.5
-    //     "meta-llama/llama-3.1-8b-instruct",  // Remove comment to enable Llama 3.1 / 删除注释以启用Llama 3.1
-    //     "openai/gpt-4o-mini"  // Remove comment to enable GPT-4o Mini / 删除注释以启用GPT-4o Mini
+    //     "google/gemini-2.5-pro-preview",
+    //     "anthropic/claude-3.5-sonnet",
+    //     "meta-llama/llama-3.1-8b-instruct",
+    //     "openai/gpt-4o-mini"
     //   ],
     //   "transformer": { "use": ["openrouter"] }
     // },
     
     {
-      // Google Gemini Provider Configuration / Google Gemini 提供商配置
       "name": "gemini",
       "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
       "api_keys": [
-        "sk-xxx1",  // Replace with your Gemini API key / 替换为您的Gemini API密钥
-        "sk-xxx2"   // You can add multiple keys / 可以添加多个密钥
+        "sk-xxx1",
+        "sk-xxx2"
       ],
       "enable_rotation": true,
-      "rotation_strategy": "random",  // Random rotation / 随机轮询
+      "rotation_strategy": "random",
       "retry_on_failure": false,
       "models": [
-        "gemini-2.5-flash",  // Remove comment to enable Gemini Flash (fast, economical) / 删除注释以启用Gemini Flash（快速、经济）
-        "gemini-2.5-pro"     // Remove comment to enable Gemini Pro (high quality) / 删除注释以启用Gemini Pro（高质量）
+        "gemini-2.5-flash",
+        "gemini-2.5-pro"
       ],
       "transformer": { "use": ["gemini"] }
     }
     
     // {
-    //   // Ollama Local Model Configuration / Ollama 本地模型配置
     //   "name": "ollama",
     //   "api_base_url": "http://localhost:11434/v1/chat/completions",
-    //   "api_key": "ollama",  // Ollama doesn't need real API key / Ollama不需要真实API密钥
+    //   "api_key": "ollama",
     //   "models": [
-    //     "qwen2.5-coder:latest",  // Remove comment to enable Qwen Coder / 删除注释以启用Qwen Coder
-    //     "codellama:latest",      // Remove comment to enable Code Llama / 删除注释以启用Code Llama
-    //     "llama3.2:latest"        // Remove comment to enable Llama 3.2 / 删除注释以启用Llama 3.2
+    //     "qwen2.5-coder:latest",
+    //     "codellama:latest",
+    //     "llama3.2:latest"
     //   ]
     // }
   ],
   
-  // Router Rules Configuration / 路由规则配置
+  // Router Rules
   "Router": {
-    // Default route: for general code generation tasks / 默认路由：用于一般代码生成任务
-    "default": "gemini,gemini-2.5-pro",  // Use Gemini Pro as default model / 使用Gemini Pro作为默认模型
-    
-    // Background tasks: for lightweight, fast tasks / 后台任务：用于轻量级、快速的任务
-    "background": "gemini,gemini-2.5-flash",  // Use Gemini Flash for background tasks / 使用Gemini Flash处理后台任务
-    
-    // Thinking tasks: for complex problems requiring deep thinking / 思考任务：用于需要深度思考的复杂问题
-    "think": "deepseek,deepseek-reasoner",  // Use DeepSeek Reasoner for deep thinking / 使用DeepSeek Reasoner进行深度思考
-    
-    // Long context tasks: for tasks requiring large text processing / 长上下文任务：用于需要处理大量文本的任务
-    "longContext": "openrouter,google/gemini-2.5-pro-preview"  // Use Gemini Pro for long context / 使用Gemini Pro处理长上下文
+    "default": "gemini,gemini-2.5-pro",
+    "background": "gemini,gemini-2.5-flash",
+    "think": "deepseek,deepseek-reasoner",
+    "longContext": "openrouter,google/gemini-2.5-pro-preview"
   }
 } 
