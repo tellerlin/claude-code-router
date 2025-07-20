@@ -55,12 +55,55 @@ npm install -g @tellerlin/claude-code-router
 
 ### 2. 配置
 
-创建并配置您的 `~/.claude-code-router/config.json` 文件。系统会在首次运行时自动验证配置格式，如果配置有误会显示详细的错误信息。
+#### 步骤 1: 创建配置目录
+```bash
+# 创建配置目录
+mkdir -p ~/.claude-code-router
+```
 
-**配置文件位置**: `~/.claude-code-router/config.json`
-**示例配置文件**: 
-- `config.example.json` - 基本配置示例
-- `config.example.with-rotation.json` - 包含API Key轮询的配置示例
+#### 步骤 2: 复制配置模板
+选择以下选项之一：
+
+**选项 A: 基本配置（单个 API Key）**
+```bash
+# 复制基本配置模板
+cp config.example.json ~/.claude-code-router/config.json
+```
+
+**选项 B: API Key 轮询配置（多个 API Key）**
+```bash
+# 复制轮询配置模板
+cp config.example.with-rotation.json ~/.claude-code-router/config.json
+```
+
+#### 步骤 3: 编辑配置文件
+```bash
+# 使用您喜欢的编辑器编辑配置文件
+nano ~/.claude-code-router/config.json
+# 或使用 vim
+vim ~/.claude-code-router/config.json
+# 或使用 VS Code
+code ~/.claude-code-router/config.json
+```
+
+#### 步骤 4: 配置您的设置
+替换配置文件中的占位符值：
+
+1. **替换 API Keys**: 将 `"sk-xxx"` 替换为您的实际 API keys
+2. **更新提供商 URL**: 确保 `api_base_url` 指向您想要的提供商
+3. **设置您的密钥**: 将 `"your-secret-key"` 替换为用于身份验证的安全密钥
+4. **配置代理**（可选）: 如果需要使用代理，请设置 `PROXY_URL`
+
+#### 步骤 5: 保存并退出
+- **对于 nano**: 按 `Ctrl+X`，然后按 `Y`，然后按 `Enter`
+- **对于 vim**: 按 `Esc`，输入 `:wq`，然后按 `Enter`
+- **对于 VS Code**: 按 `Ctrl+S` 保存，然后关闭编辑器
+
+#### 配置文件位置
+- **路径**: `~/.claude-code-router/config.json`
+- **示例文件**: 
+  - `config.example.json` - 基本配置示例
+  - `config.example.with-rotation.json` - 包含API Key轮询的配置示例
 
 #### 基本配置示例
 
@@ -103,8 +146,38 @@ npm install -g @tellerlin/claude-code-router
 
 ### 3. 启动
 
-```shell
+#### 首次设置
+如果这是您第一次运行该工具，它将引导您完成交互式设置：
+
+```bash
 ccr code
+```
+
+系统将要求您提供：
+- 提供商名称
+- API 密钥
+- 提供商 URL
+- 模型名称
+
+#### 正常使用
+配置完成后，只需运行：
+
+```bash
+ccr code
+```
+
+#### 验证安装
+检查是否一切正常：
+
+```bash
+# 检查服务状态
+ccr status
+
+# 检查版本
+ccr -v
+
+# 获取帮助
+ccr -h
 ```
 
 ## 🔄 API Key 轮询功能
@@ -370,11 +443,47 @@ Claude Code Router 会将所有参数直接传递给原始的 Claude Code，因�
 
 ### 服务启动失败
 
-1. 检查配置文件格式是否正确
-2. 确认 API Key 是否有效
-3. 检查网络连接和代理设置
-4. 查看日志文件获取详细错误信息
-5. 确认端口 3456 未被占用
+1. **检查配置文件**:
+   ```bash
+   # 验证配置文件是否存在
+   ls -la ~/.claude-code-router/config.json
+   
+   # 检查 JSON 语法
+   cat ~/.claude-code-router/config.json | jq .
+   ```
+
+2. **验证 API Keys**:
+   ```bash
+   # 使用 curl 测试您的 API key（以 DeepSeek 为例）
+   curl -X POST "https://api.deepseek.com/chat/completions" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -d '{"model":"deepseek-chat","messages":[{"role":"user","content":"Hello"}]}'
+   ```
+
+3. **检查网络和代理**:
+   ```bash
+   # 测试网络连接
+   ping api.deepseek.com
+   
+   # 如果配置了代理，测试代理
+   curl --proxy http://127.0.0.1:7890 https://api.deepseek.com
+   ```
+
+4. **查看日志**:
+   ```bash
+   # 在 config.json 中启用日志: "LOG": true
+   # 然后检查日志文件
+   tail -f ~/.claude-code-router.log
+   ```
+
+5. **检查端口占用**:
+   ```bash
+   # 检查端口 3456 是否被占用
+   netstat -tulpn | grep 3456
+   # 或者
+   lsof -i :3456
+   ```
 
 ### API Key 轮询问题
 

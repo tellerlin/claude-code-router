@@ -57,12 +57,55 @@ npm install -g @tellerlin/claude-code-router
 
 ### 2. Configuration
 
-Create and configure your `~/.claude-code-router/config.json` file. The system will automatically validate the configuration format on first run and display detailed error messages if there are any issues.
+#### Step 1: Create Configuration Directory
+```bash
+# Create the configuration directory
+mkdir -p ~/.claude-code-router
+```
 
-**Configuration file location**: `~/.claude-code-router/config.json`
-**Example configuration files**: 
-- `config.example.json` - Basic configuration example
-- `config.example.with-rotation.json` - Configuration example with API Key rotation
+#### Step 2: Copy Configuration Template
+Choose one of the following options:
+
+**Option A: Basic Configuration (Single API Key)**
+```bash
+# Copy the basic configuration template
+cp config.example.json ~/.claude-code-router/config.json
+```
+
+**Option B: API Key Rotation Configuration (Multiple API Keys)**
+```bash
+# Copy the rotation configuration template
+cp config.example.with-rotation.json ~/.claude-code-router/config.json
+```
+
+#### Step 3: Edit Configuration File
+```bash
+# Edit the configuration file with your preferred editor
+nano ~/.claude-code-router/config.json
+# or use vim
+vim ~/.claude-code-router/config.json
+# or use VS Code
+code ~/.claude-code-router/config.json
+```
+
+#### Step 4: Configure Your Settings
+Replace the placeholder values in the configuration file:
+
+1. **Replace API Keys**: Replace `"sk-xxx"` with your actual API keys
+2. **Update Provider URLs**: Ensure the `api_base_url` points to your desired provider
+3. **Set Your Secret Key**: Replace `"your-secret-key"` with a secure key for authentication
+4. **Configure Proxy** (optional): Set `PROXY_URL` if you need to use a proxy
+
+#### Step 5: Save and Exit
+- **For nano**: Press `Ctrl+X`, then `Y`, then `Enter`
+- **For vim**: Press `Esc`, type `:wq`, then press `Enter`
+- **For VS Code**: Press `Ctrl+S` to save, then close the editor
+
+#### Configuration File Location
+- **Path**: `~/.claude-code-router/config.json`
+- **Example files**: 
+  - `config.example.json` - Basic configuration example
+  - `config.example.with-rotation.json` - Configuration example with API Key rotation
 
 #### Basic Configuration Example
 
@@ -105,8 +148,38 @@ Create and configure your `~/.claude-code-router/config.json` file. The system w
 
 ### 3. Running
 
-```shell
+#### First Time Setup
+If this is your first time running the tool, it will guide you through an interactive setup:
+
+```bash
 ccr code
+```
+
+The system will ask you to provide:
+- Provider name
+- API key
+- Provider URL
+- Model name
+
+#### Normal Usage
+After configuration, simply run:
+
+```bash
+ccr code
+```
+
+#### Verify Installation
+To check if everything is working:
+
+```bash
+# Check service status
+ccr status
+
+# Check version
+ccr -v
+
+# Get help
+ccr -h
 ```
 
 ## 🔄 API Key Rotation Feature
@@ -372,11 +445,47 @@ Claude Code Router passes all parameters directly to the original Claude Code, s
 
 ### Service Startup Failure
 
-1. Check if the configuration file format is correct
-2. Confirm if the API Key is valid
-3. Check network connection and proxy settings
-4. View log file for detailed error information
-5. Confirm port 3456 is not occupied
+1. **Check Configuration File**:
+   ```bash
+   # Verify the configuration file exists
+   ls -la ~/.claude-code-router/config.json
+   
+   # Check JSON syntax
+   cat ~/.claude-code-router/config.json | jq .
+   ```
+
+2. **Validate API Keys**:
+   ```bash
+   # Test your API key with curl (example for DeepSeek)
+   curl -X POST "https://api.deepseek.com/chat/completions" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -d '{"model":"deepseek-chat","messages":[{"role":"user","content":"Hello"}]}'
+   ```
+
+3. **Check Network and Proxy**:
+   ```bash
+   # Test network connectivity
+   ping api.deepseek.com
+   
+   # Test proxy if configured
+   curl --proxy http://127.0.0.1:7890 https://api.deepseek.com
+   ```
+
+4. **View Logs**:
+   ```bash
+   # Enable logging in config.json: "LOG": true
+   # Then check the log file
+   tail -f ~/.claude-code-router.log
+   ```
+
+5. **Check Port Usage**:
+   ```bash
+   # Check if port 3456 is occupied
+   netstat -tulpn | grep 3456
+   # or
+   lsof -i :3456
+   ```
 
 ### API Key Rotation Issues
 
