@@ -35,7 +35,6 @@
     "scripts/",
     "config.example.json",
     "config.example.with-rotation.json",
-    "config.example.with-rotation.jsonc",
     "README.md",
     "README_zh.md",
     "LICENSE"

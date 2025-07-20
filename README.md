@@ -92,7 +92,7 @@ cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jso
 **Option C: Annotated Configuration Template (Recommended for beginners)**
 ```bash
 # Copy the annotated configuration template with detailed comments
-cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jsonc ~/.claude-code-router/config.json
+cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
 This template has all providers commented out by default, with only Gemini enabled as an example. To enable a provider, simply remove the `//` comments from the beginning of each line in that provider's configuration block.
@@ -136,7 +136,7 @@ Replace the placeholder values in the configuration file:
 - **Example files** (available in the installed package): 
   - `config.example.json` - Basic configuration example
   - `config.example.with-rotation.json` - Configuration example with API Key rotation
-  - `config.example.with-rotation.jsonc` - Annotated configuration template with detailed comments (recommended for beginners)
+  - `config.example.with-rotation.json` - Configuration template with API key rotation support (recommended for advanced users)
 - **Package location**: Use `npm root -g` to find where the package is installed
 
 #### Basic Configuration Example

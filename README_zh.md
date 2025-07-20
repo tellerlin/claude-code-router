@@ -90,7 +90,7 @@ cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jso
 **选项 C: 带注释的配置模板（推荐给初学者）**
 ```bash
 # 复制带详细注释的配置模板
-cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jsonc ~/.claude-code-router/config.json
+cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
 此模板默认注释掉了所有提供商，仅启用Gemini作为示例。要启用某个提供商，只需删除该提供商配置块中每行开头的 `//` 注释即可。
@@ -134,7 +134,7 @@ code ~/.claude-code-router/config.json
 - **示例文件**（在安装的包中可用）: 
   - `config.example.json` - 基本配置示例
   - `config.example.with-rotation.json` - 包含API Key轮询的配置示例
-  - `config.example.with-rotation.jsonc` - 带详细注释的配置模板（推荐给初学者）
+  - `config.example.with-rotation.json` - 支持API密钥轮询的配置模板（推荐给高级用户）
 - **包位置**: 使用 `npm root -g` 查找包安装位置
 
 #### 基本配置示例

@@ -88,13 +88,8 @@ async function setupConfig() {
     }
   }
 
-  // Copy configuration template (prefer annotated version)
-  let templatePath = path.join(packageDir, 'config.example.with-rotation.jsonc');
-  
-  // Fallback to regular version if annotated version doesn't exist
-  if (!fs.existsSync(templatePath)) {
-    templatePath = path.join(packageDir, 'config.example.with-rotation.json');
-  }
+  // Copy configuration template
+  let templatePath = path.join(packageDir, 'config.example.with-rotation.json');
   
   if (!fs.existsSync(templatePath)) {
     console.log(`${msg.templateNotFound}`);
