@@ -2,16 +2,41 @@
 
 > 一款强大的工具，可将 Claude Code 请求路由到不同的模型，并自定义任何请求。
 
+## 📋 Fork 信息
+
+这是 [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router) 的 Fork 版本，新增了 **API Key 轮询** 功能。
+
+### 🆕 本 Fork 新增功能
+
+- **API Key 轮询**: 支持多个 API Key 的自动轮询
+- **多种轮询策略**: round_robin、random、weighted、least_used
+- **智能错误处理**: 自动重试、失败计数、冷却机制
+- **状态监控**: 实时监控 API Key 轮询状态
+- **向后兼容**: 所有原始功能保持不变
+
+### 🔗 相关链接
+
+- **原始项目**: [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router)
+- **本 Fork**: [tellerlin/claude-code-router](https://github.com/tellerlin/claude-code-router)
+- **API Key 轮询文档**: [API_KEY_ROTATION_README.md](API_KEY_ROTATION_README.md)
+
 ![](blog/images/claude-code.png)
 
 ## ✨ 功能
 
+### 原始功能
 -   **模型路由**: 根据您的需求将请求路由到不同的模型（例如，后台任务、思考、长上下文）。
 -   **多提供商支持**: 支持 OpenRouter、DeepSeek、Ollama、Gemini、Volcengine 和 SiliconFlow 等各种模型提供商。
 -   **请求/响应转换**: 使用转换器为不同的提供商自定义请求和响应。
 -   **动态模型切换**: 在 Claude Code 中使用 `/model` 命令动态切换模型。
 -   **GitHub Actions 集成**: 在您的 GitHub 工作流程中触发 Claude Code 任务。
 -   **插件系统**: 使用自定义转换器扩展功能。
+
+### 🆕 本 Fork 新增功能
+-   **API Key 轮询**: 支持多个 API Key 的自动轮询和负载均衡
+-   **多种轮询策略**: round_robin、random、weighted、least_used
+-   **智能错误处理**: 自动重试、失败计数、冷却机制
+-   **状态监控**: 通过 `ccr rotation` 命令实时监控 API Key 轮询状态
 
 ## 🚀 快速入门
 
@@ -26,7 +51,11 @@ npm install -g @anthropic-ai/claude-code
 然后，安装 Claude Code Router：
 
 ```shell
+# 安装原始版本
 npm install -g @musistudio/claude-code-router
+
+# 或安装包含 API Key 轮询功能的 Fork 版本
+npm install -g @tellerlin/claude-code-router
 ```
 
 ### 2. 配置

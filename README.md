@@ -4,16 +4,41 @@
 
 > A powerful tool to route Claude Code requests to different models and customize any request.
 
+## 📋 Fork Information
+
+This is a fork of [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router) with additional **API Key Rotation** functionality.
+
+### 🆕 New Features in This Fork
+
+- **API Key Rotation**: Support for multiple API keys with automatic rotation
+- **Multiple Rotation Strategies**: round_robin, random, weighted, least_used
+- **Smart Error Handling**: Automatic retry, failure counting, cooldown mechanism
+- **Status Monitoring**: Real-time monitoring of API key rotation status
+- **Backward Compatibility**: All original features remain unchanged
+
+### 🔗 Links
+
+- **Original Project**: [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router)
+- **This Fork**: [tellerlin/claude-code-router](https://github.com/tellerlin/claude-code-router)
+- **API Key Rotation Documentation**: [API_KEY_ROTATION_README.md](API_KEY_ROTATION_README.md)
+
 ![](blog/images/claude-code.png)
 
 ## ✨ Features
 
+### Original Features
 -   **Model Routing**: Route requests to different models based on your needs (e.g., background tasks, thinking, long context).
 -   **Multi-Provider Support**: Supports various model providers like OpenRouter, DeepSeek, Ollama, Gemini, Volcengine, and SiliconFlow.
 -   **Request/Response Transformation**: Customize requests and responses for different providers using transformers.
 -   **Dynamic Model Switching**: Switch models on-the-fly within Claude Code using the `/model` command.
 -   **GitHub Actions Integration**: Trigger Claude Code tasks in your GitHub workflows.
 -   **Plugin System**: Extend functionality with custom transformers.
+
+### 🆕 New Features in This Fork
+-   **API Key Rotation**: Support for multiple API keys with automatic rotation and load balancing
+-   **Multiple Rotation Strategies**: round_robin, random, weighted, least_used
+-   **Smart Error Handling**: Automatic retry, failure counting, cooldown mechanism
+-   **Status Monitoring**: Real-time monitoring of API key rotation status via `ccr rotation` command
 
 ## 🚀 Getting Started
 
@@ -28,7 +53,11 @@ npm install -g @anthropic-ai/claude-code
 Then, install Claude Code Router:
 
 ```shell
+# Install original version
 npm install -g @musistudio/claude-code-router
+
+# Or install this fork version with API Key rotation
+npm install -g @tellerlin/claude-code-router
 ```
 
 ### 2. Configuration
