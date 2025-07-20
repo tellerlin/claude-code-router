@@ -88,7 +88,7 @@ async function setupConfig() {
     }
   }
 
-  // Copy configuration template
+  // Copy configuration template (use rotation template by default)
   let templatePath = path.join(packageDir, 'config.example.with-rotation.json');
   
   if (!fs.existsSync(templatePath)) {

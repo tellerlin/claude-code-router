@@ -132,9 +132,8 @@ code ~/.claude-code-router/config.json
 - **全局配置**: 此配置文件是全局的，适用于您系统上的所有项目
 - **安全提醒**: 配置文件包含敏感的 API Keys，绝不应该提交到版本控制
 - **示例文件**（在安装的包中可用）: 
-  - `config.example.json` - 基本配置示例
-  - `config.example.with-rotation.json` - 包含API Key轮询的配置示例
-  - `config.example.with-rotation.json` - 支持API密钥轮询的配置模板（推荐给高级用户）
+  - `config.example.json` - 基本配置示例（仅Gemini 2.5-pro）
+  - `config.example.with-rotation.json` - 支持API密钥轮询的配置模板（推荐，仅Gemini 2.5-pro）
 - **包位置**: 使用 `npm root -g` 查找包安装位置
 
 #### 基本配置示例

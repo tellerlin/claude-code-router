@@ -134,9 +134,8 @@ Replace the placeholder values in the configuration file:
 - **Global Configuration**: This configuration file is global and applies to all projects on your system
 - **Security Note**: The configuration file contains sensitive API keys and should never be committed to version control
 - **Example files** (available in the installed package): 
-  - `config.example.json` - Basic configuration example
-  - `config.example.with-rotation.json` - Configuration example with API Key rotation
-  - `config.example.with-rotation.json` - Configuration template with API key rotation support (recommended for advanced users)
+  - `config.example.json` - Basic configuration example (Gemini 2.5-pro only)
+  - `config.example.with-rotation.json` - Configuration template with API key rotation support (recommended, Gemini 2.5-pro only)
 - **Package location**: Use `npm root -g` to find where the package is installed
 
 #### Basic Configuration Example
