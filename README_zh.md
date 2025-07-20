@@ -633,48 +633,7 @@ jobs:
 - **[项目动机和工作原理](blog/zh/项目初衷及原理.md)** - 项目背景和技术原理
 - **[也许我们可以用路由器做更多事情](blog/zh/或许我们能在Router中做更多事情.md)** - 扩展功能讨论
 
-## ❤️ 支持与赞助
 
-**这是原始项目的Fork版本。请支持原始作者：**
-
-- **原始项目**: [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router)
-- **支持原始作者**: 如果您觉得这个项目有帮助，请考虑在[原始仓库](https://github.com/musistudio/claude-code-router)赞助原始开发。
-
-### 原始项目赞助商
-
-非常感谢所有原始项目赞助商的慷慨支持！
-
-- @Simon Leischnig
-- [@duanshuaimin](https://github.com/duanshuaimin)
-- [@vrgitadmin](https://github.com/vrgitadmin)
-- @*o
-- [@ceilwoo](https://github.com/ceilwoo)
-- @*说
-- @*更
-- @K*g
-- @R*R
-- [@bobleer](https://github.com/bobleer)
-- @*苗
-- @*划
-- [@Clarence-pan](https://github.com/Clarence-pan)
-- [@carter003](https://github.com/carter003)
-- @S*r
-- @*晖
-- @*敏
-- @Z*z
-- @*然
-- [@cluic](https://github.com/cluic)
-- @*苗
-- [@PromptExpert](https://github.com/PromptExpert)
-- @*应
-- [@yusnake](https://github.com/yusnake)
-- @*飞
-- @董*
-- *汀
-- *涯
-- *:-）
-
-（如果您的名字被屏蔽，请通过原始作者的主页电子邮件与他们联系，以便使用您的 GitHub 用户名进行更新。）
 
 ## 交流群
 <img src="/blog/images/wechat_group.jpg" width="200" alt="wechat_group" />

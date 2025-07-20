@@ -3,6 +3,7 @@ import { run } from "./index";
 import { showStatus, showDetailedRotationStatus } from "./utils/status";
 import { executeCodeCommand } from "./utils/codeCommand";
 import { cleanupPidFile, isServiceRunning } from "./utils/processCheck";
+import { showVersionInfo, showUpdatePrompt, shouldShowUpdatePrompt } from "./utils/versionCheck";
 import { version } from "../package.json";
 import { spawn } from "child_process";
 import { PID_FILE, REFERENCE_COUNT_FILE } from "./constants";
@@ -49,6 +50,14 @@ async function waitForService(
 }
 
 async function main() {
+  // Show version info and update prompt for all commands except help and version
+  if (command !== "-h" && command !== "help" && command !== "-v" && command !== "version") {
+    showVersionInfo();
+    if (shouldShowUpdatePrompt()) {
+      showUpdatePrompt();
+    }
+  }
+  
   switch (command) {
     case "start":
       run();
