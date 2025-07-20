@@ -262,7 +262,8 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 ```
 
 #### Complete Configuration with Router Rules
-    ```json
+
+```json
 {
   "APIKEY": "your-secret-key",
   "PROXY_URL": "http://127.0.0.1:7890",
@@ -299,9 +300,9 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
     "background": "gemini,gemini-2.5-flash",
     "think": "gemini,gemini-2.5-pro",
     "longContext": "gemini,gemini-2.5-pro"
-      }
-    }
-    ```
+  }
+}
+```
 
 ### Rotation Strategies
 
