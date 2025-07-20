@@ -143,7 +143,7 @@ Replace the placeholder values in the configuration file:
 
 ```json
 {
-  "APIKEY": "your-secret-key",
+  // "APIKEY": "your-access-key",  // Optional: Access control key
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",
@@ -265,7 +265,7 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 
 ```json
 {
-  "APIKEY": "your-secret-key",
+  // "APIKEY": "your-access-key",  // Optional: Access control key
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",
@@ -435,7 +435,7 @@ ccr code "Write a Hello World program"
 
 ### Global Configuration Items
 
-- **`APIKEY`** (optional): Set access key for authentication. When set, client requests must provide this key in the `Authorization` header (e.g., `Bearer your-secret-key`) or `x-api-key` header
+- **`APIKEY`** (optional): Set access control key to protect the service from unauthorized access. When set, client requests must provide this key in the `Authorization` header (e.g., `Bearer your-access-key`) or `x-api-key` header. If not set, the service will only accept local connections (127.0.0.1)
 - **`PROXY_URL`** (optional): Set proxy server address, e.g.: `"PROXY_URL": "http://127.0.0.1:7890"`
 - **`LOG`** (optional): Enable logging, log file located at `$HOME/.claude-code-router.log`
 - **`HOST`** (optional): Set service listening address. If `APIKEY` is not set, the host address will be forced to `127.0.0.1` for security reasons to prevent unauthorized access

@@ -141,7 +141,7 @@ code ~/.claude-code-router/config.json
 
 ```json
 {
-  "APIKEY": "your-secret-key",
+  // "APIKEY": "your-access-key",  // 可选：访问控制密钥
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",
@@ -262,7 +262,7 @@ Claude Code Router 现在支持多个 API Key 轮询功能，可以自动在多�
 #### 3. 完整配置（包含路由规则）
 ```json
 {
-  "APIKEY": "your-secret-key",
+  // "APIKEY": "your-access-key",  // 可选：访问控制密钥
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",
@@ -432,7 +432,7 @@ ccr code "写一个 Hello World 程序"
 
 ### 全局配置项
 
-- **`APIKEY`** (可选): 设置访问密钥，用于身份验证。设置后，客户端请求必须在 `Authorization` 请求头 (例如, `Bearer your-secret-key`) 或 `x-api-key` 请求头中提供此密钥
+- **`APIKEY`** (可选): 设置访问控制密钥，保护服务不被未授权访问。设置后，客户端请求必须在 `Authorization` 请求头 (例如, `Bearer your-access-key`) 或 `x-api-key` 请求头中提供此密钥。如果不设置，服务将只接受本地连接 (127.0.0.1)
 - **`PROXY_URL`** (可选): 设置代理服务器地址，例如：`"PROXY_URL": "http://127.0.0.1:7890"`
 - **`LOG`** (可选): 启用日志记录，日志文件位于 `$HOME/.claude-code-router.log`
 - **`HOST`** (可选): 设置服务监听地址。如果未设置 `APIKEY`，出于安全考虑，主机地址将强制设置为 `127.0.0.1`，以防止未经授权的访问

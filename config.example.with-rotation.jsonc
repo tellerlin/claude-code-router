@@ -1,6 +1,6 @@
 {
   // Basic Configuration
-  "APIKEY": "your-secret-key",
+  // "APIKEY": "your-access-key",  // Optional: Access control key to protect the service
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",
