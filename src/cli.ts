@@ -31,8 +31,8 @@ Example:
 `;
 
 async function waitForService(
-  timeout = 10000,
-  initialDelay = 1000
+  timeout = 30000,
+  initialDelay = 2000
 ): Promise<boolean> {
   // Wait for an initial period to let the service initialize
   await new Promise((resolve) => setTimeout(resolve, initialDelay));
@@ -41,10 +41,10 @@ async function waitForService(
   while (Date.now() - startTime < timeout) {
     if (isServiceRunning()) {
       // Wait for an additional short period to ensure service is fully ready
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return true;
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
   return false;
 }

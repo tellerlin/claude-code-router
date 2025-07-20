@@ -57,26 +57,28 @@ export const readConfigFile = async () => {
     }
     
     return parsedConfig;
-  } catch {
-    const name = await question("Enter Provider Name: ");
-    const APIKEY = await question("Enter Provider API KEY: ");
-    const baseUrl = await question("Enter Provider URL: ");
-    const model = await question("Enter MODEL Name: ");
-    const config = Object.assign({}, DEFAULT_CONFIG, {
-      Providers: [
-        {
-          name,
-          api_base_url: baseUrl,
-          api_key: APIKEY,
-          models: [model],
-        },
-      ],
-      Router: {
-        default: `${name},${model}`,
-      },
-    });
-    await writeConfigFile(config);
-    return config;
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      // 配置文件不存在
+      console.error("❌ Configuration file not found!");
+      console.error(`   Expected location: ${CONFIG_FILE}`);
+      console.error("");
+      console.error("📝 Please create the configuration file first:");
+      console.error("   1. Run: ccr-setup (recommended)");
+      console.error("   2. Or manually create the config file:");
+      console.error(`      mkdir -p ~/.claude-code-router`);
+      console.error(`      cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json`);
+      console.error("");
+      console.error("🔧 Then edit the config file with your API keys and run ccr code again.");
+      process.exit(1);
+    } else {
+      // 其他错误（如JSON解析错误）
+      console.error("❌ Failed to read configuration file:");
+      console.error(`   ${error.message}`);
+      console.error("");
+      console.error("🔧 Please check your configuration file format and try again.");
+      process.exit(1);
+    }
   }
 };
 

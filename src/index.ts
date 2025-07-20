@@ -96,7 +96,15 @@ async function run(options: RunOptions = {}) {
   server.addHook("preHandler", async (req, reply) =>
     router(req, reply, processedConfig)
   );
-  server.start();
+  
+  try {
+    await server.start();
+    console.log(`🚀 Claude Code Router service started successfully on ${HOST}:${servicePort}`);
+  } catch (error) {
+    console.error("Failed to start service:", error);
+    cleanupPidFile();
+    process.exit(1);
+  }
 }
 
 export { run };
