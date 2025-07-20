@@ -52,11 +52,7 @@ npm install -g @anthropic-ai/claude-code
 Then, install Claude Code Router:
 
 ```shell
-# Install this fork version with API Key rotation
 npm install -g @tellerlin/claude-code-router
-
-# Or install original version
-npm install -g @musistudio/claude-code-router
 ```
 
 ### 2. Configuration
@@ -122,20 +118,20 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 #### Basic Rotation Configuration
 ```json
 {
-  "name": "deepseek",
-  "api_base_url": "https://api.deepseek.com/chat/completions",
+  "name": "gemini",
+  "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
   "api_keys": ["sk-xxx1", "sk-xxx2", "sk-xxx3"],
   "enable_rotation": true,
   "rotation_strategy": "round_robin",
-  "models": ["deepseek-chat", "deepseek-reasoner"]
+  "models": ["gemini-2.5-flash", "gemini-2.5-pro"]
 }
 ```
 
 #### Advanced Rotation Configuration
 ```json
 {
-  "name": "openrouter",
-  "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+  "name": "gemini",
+  "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
   "api_keys": [
     {
       "key": "sk-xxx1",
@@ -154,7 +150,7 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
   "rotation_strategy": "weighted",
   "retry_on_failure": true,
   "max_retries": 3,
-  "models": ["google/gemini-2.5-pro-preview"]
+  "models": ["gemini-2.5-flash", "gemini-2.5-pro"]
 }
 ```
 
