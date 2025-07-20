@@ -103,6 +103,8 @@ Replace the placeholder values in the configuration file:
 
 #### Configuration File Location
 - **Path**: `~/.claude-code-router/config.json`
+- **Global Configuration**: This configuration file is global and applies to all projects on your system
+- **Security Note**: The configuration file contains sensitive API keys and should never be committed to version control
 - **Example files**: 
   - `config.example.json` - Basic configuration example
   - `config.example.with-rotation.json` - Configuration example with API Key rotation

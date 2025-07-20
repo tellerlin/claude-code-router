@@ -101,6 +101,8 @@ code ~/.claude-code-router/config.json
 
 #### 配置文件位置
 - **路径**: `~/.claude-code-router/config.json`
+- **全局配置**: 此配置文件是全局的，适用于您系统上的所有项目
+- **安全提醒**: 配置文件包含敏感的 API Keys，绝不应该提交到版本控制
 - **示例文件**: 
   - `config.example.json` - 基本配置示例
   - `config.example.with-rotation.json` - 包含API Key轮询的配置示例

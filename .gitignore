@@ -3,3 +3,9 @@ node_modules
 log.txt
 .idea
 dist
+
+# Claude Code Router configuration files
+~/.claude-code-router/
+.claude-code-router/
+*.pid
+claude-code-router.log
