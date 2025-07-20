@@ -20,6 +20,7 @@ This is a fork of [musistudio/claude-code-router](https://github.com/musistudio/
 
 - **Original Project**: [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router)
 - **This Fork**: [tellerlin/claude-code-router](https://github.com/tellerlin/claude-code-router)
+- **Detailed Usage Guide**: [使用说明.md](使用说明.md)
 - **API Key Rotation Documentation**: [API_KEY_ROTATION_README.md](API_KEY_ROTATION_README.md)
 
 ![](blog/images/claude-code.png)
@@ -62,177 +63,24 @@ npm install -g @musistudio/claude-code-router
 
 ### 2. Configuration
 
-Create and configure your `~/.claude-code-router/config.json` file. For more details, you can refer to `config.example.json`.
+Create and configure your `~/.claude-code-router/config.json` file. Refer to `config.example.json` or `config.example.with-rotation.json`.
 
-The `config.json` file has several key sections:
-- **`PROXY_URL`** (optional): You can set a proxy for API requests, for example: `"PROXY_URL": "http://127.0.0.1:7890"`.
-- **`LOG`** (optional): You can enable logging by setting it to `true`. The log file will be located at `$HOME/.claude-code-router.log`.
-- **`APIKEY`** (optional): You can set a secret key to authenticate requests. When set, clients must provide this key in the `Authorization` header (e.g., `Bearer your-secret-key`) or the `x-api-key` header. Example: `"APIKEY": "your-secret-key"`.
-- **`HOST`** (optional): You can set the host address for the server. If `APIKEY` is not set, the host will be forced to `127.0.0.1` for security reasons to prevent unauthorized access. Example: `"HOST": "0.0.0.0"`.
-
-- **`Providers`**: Used to configure different model providers.
-- **`Router`**: Used to set up routing rules. `default` specifies the default model, which will be used for all requests if no other route is configured.
-
-Here is a comprehensive example:
-
-```json
-{
-  "APIKEY": "your-secret-key",
-  "PROXY_URL": "http://127.0.0.1:7890",
-  "LOG": true,
-  "Providers": [
-    {
-      "name": "openrouter",
-      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-      "api_key": "sk-xxx",
-      "models": [
-        "google/gemini-2.5-pro-preview",
-        "anthropic/claude-sonnet-4",
-        "anthropic/claude-3.5-sonnet"
-      ],
-      "transformer": { "use": ["openrouter"] }
-    },
-    {
-      "name": "deepseek",
-      "api_base_url": "https://api.deepseek.com/chat/completions",
-      "api_key": "sk-xxx",
-      "models": ["deepseek-chat", "deepseek-reasoner"],
-      "transformer": {
-        "use": ["deepseek"],
-        "deepseek-chat": { "use": ["tooluse"] }
-      }
-    },
-    {
-      "name": "ollama",
-      "api_base_url": "http://localhost:11434/v1/chat/completions",
-      "api_key": "ollama",
-      "models": ["qwen2.5-coder:latest"]
-    }
-  ],
-  "Router": {
-    "default": "deepseek,deepseek-chat",
-    "background": "ollama,qwen2.5-coder:latest",
-    "think": "deepseek,deepseek-reasoner",
-    "longContext": "openrouter,google/gemini-2.5-pro-preview"
-  }
-}
-```
-
-
-### 3. Running Claude Code with the Router
-
-Start Claude Code using the router:
+### 3. Running
 
 ```shell
 ccr code
 ```
 
-#### Providers
+## 📖 Documentation
 
-The `Providers` array is where you define the different model providers you want to use. Each provider object requires:
-
--   `name`: A unique name for the provider.
--   `api_base_url`: The full API endpoint for chat completions.
--   `api_key`: Your API key for the provider.
--   `models`: A list of model names available from this provider.
--   `transformer` (optional): Specifies transformers to process requests and responses.
-
-#### Transformers
-
-Transformers allow you to modify the request and response payloads to ensure compatibility with different provider APIs.
-
--   **Global Transformer**: Apply a transformer to all models from a provider. In this example, the `openrouter` transformer is applied to all models under the `openrouter` provider.
-    ```json
-     {
-       "name": "openrouter",
-       "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-       "api_key": "sk-xxx",
-       "models": [
-         "google/gemini-2.5-pro-preview",
-         "anthropic/claude-sonnet-4",
-         "anthropic/claude-3.5-sonnet"
-       ],
-       "transformer": { "use": ["openrouter"] }
-     }
-    ```
--   **Model-Specific Transformer**: Apply a transformer to a specific model. In this example, the `deepseek` transformer is applied to all models, and an additional `tooluse` transformer is applied only to the `deepseek-chat` model.
-    ```json
-     {
-       "name": "deepseek",
-       "api_base_url": "https://api.deepseek.com/chat/completions",
-       "api_key": "sk-xxx",
-       "models": ["deepseek-chat", "deepseek-reasoner"],
-       "transformer": {
-         "use": ["deepseek"],
-         "deepseek-chat": { "use": ["tooluse"] }
-       }
-     }
-    ```
-
--   **Passing Options to a Transformer**: Some transformers, like `maxtoken`, accept options. To pass options, use a nested array where the first element is the transformer name and the second is an options object.
-    ```json
-    {
-      "name": "siliconflow",
-      "api_base_url": "https://api.siliconflow.cn/v1/chat/completions",
-      "api_key": "sk-xxx",
-      "models": ["moonshotai/Kimi-K2-Instruct"],
-      "transformer": {
-        "use": [
-          [
-            "maxtoken",
-            {
-              "max_tokens": 16384
-            }
-          ]
-        ]
-      }
-    }
-    ```
-
-**Available Built-in Transformers:**
-
--   `deepseek`: Adapts requests/responses for DeepSeek API.
--   `gemini`: Adapts requests/responses for Gemini API.
--   `openrouter`: Adapts requests/responses for OpenRouter API.
--   `groq`: Adapts requests/responses for groq API.
--   `maxtoken`: Sets a specific `max_tokens` value.
--   `tooluse`: Optimizes tool usage for certain models via `tool_choice`.
--   `gemini-cli` (experimental): Unofficial support for Gemini via Gemini CLI [gemini-cli.js](https://gist.github.com/musistudio/1c13a65f35916a7ab690649d3df8d1cd).
-
-**Custom Transformers:**
-
-You can also create your own transformers and load them via the `transformers` field in `config.json`.
-
-```json
-{
-  "transformers": [
-      {
-        "path": "$HOME/.claude-code-router/plugins/gemini-cli.js",
-        "options": {
-          "project": "xxx"
-        }
-      }
-  ]
-}
-```
-
-#### Router
-
-The `Router` object defines which model to use for different scenarios:
-
--   `default`: The default model for general tasks.
--   `background`: A model for background tasks. This can be a smaller, local model to save costs.
--   `think`: A model for reasoning-heavy tasks, like Plan Mode.
--   `longContext`: A model for handling long contexts (e.g., > 60K tokens).
-
-You can also switch models dynamically in Claude Code with the `/model` command:
-`/model provider_name,model_name`
-Example: `/model openrouter,anthropic/claude-3.5-sonnet`
-
+- **[使用说明.md](使用说明.md)** - Complete usage guide and configuration instructions
+- **[API_KEY_ROTATION_README.md](API_KEY_ROTATION_README.md)** - Detailed API Key rotation documentation
+- **[Project Motivation and How It Works](blog/en/project-motivation-and-how-it-works.md)** - Project background and technical principles
+- **[Maybe We Can Do More with the Router](blog/en/maybe-we-can-do-more-with-the-route.md)** - Extended functionality discussion
 
 ## 🤖 GitHub Actions
 
-Integrate Claude Code Router into your CI/CD pipeline. After setting up [Claude Code Actions](https://docs.anthropic.com/en/docs/claude-code/github-actions), modify your `.github/workflows/claude.yaml` to use the router:
+Configure in `.github/workflows/claude.yaml`:
 
 ```yaml
 name: Claude Code
@@ -240,13 +88,10 @@ name: Claude Code
 on:
   issue_comment:
     types: [created]
-  # ... other triggers
 
 jobs:
   claude:
-    if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      # ... other conditions
+    if: contains(github.event.comment.body, '@claude')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -256,8 +101,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
       - name: Prepare Environment
         run: |
@@ -271,28 +114,18 @@ jobs:
             "OPENAI_MODEL": "deepseek-chat"
           }
           EOF
-        shell: bash
 
       - name: Start Claude Code Router
         run: |
           nohup ~/.bun/bin/bunx @tellerlin/claude-code-router@latest start &
-        shell: bash
 
       - name: Run Claude Code
-        id: claude
         uses: anthropics/claude-code-action@beta
         env:
           ANTHROPIC_BASE_URL: http://localhost:3456
         with:
           anthropic_api_key: "any-string-is-ok"
 ```
-
-This setup allows for interesting automations, like running tasks during off-peak hours to reduce API costs.
-
-## 📝 Further Reading
-
--   [Project Motivation and How It Works](blog/en/project-motivation-and-how-it-works.md)
--   [Maybe We Can Do More with the Router](blog/en/maybe-we-can-do-more-with-the-route.md)
 
 ## ❤️ Support & Sponsoring
 

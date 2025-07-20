@@ -18,6 +18,7 @@
 
 - **原始项目**: [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router)
 - **本 Fork**: [tellerlin/claude-code-router](https://github.com/tellerlin/claude-code-router)
+- **详细使用说明**: [使用说明.md](使用说明.md)
 - **API Key 轮询文档**: [API_KEY_ROTATION_README.md](API_KEY_ROTATION_README.md)
 
 ![](blog/images/claude-code.png)
@@ -38,7 +39,7 @@
 -   **智能错误处理**: 自动重试、失败计数、冷却机制
 -   **状态监控**: 通过 `ccr rotation` 命令实时监控 API Key 轮询状态
 
-## 🚀 快速入门
+## 🚀 快速开始
 
 ### 1. 安装
 
@@ -60,176 +61,24 @@ npm install -g @musistudio/claude-code-router
 
 ### 2. 配置
 
-创建并配置您的 `~/.claude-code-router/config.json` 文件。有关更多详细信息，您可以参考 `config.example.json`。
+创建并配置您的 `~/.claude-code-router/config.json` 文件。参考 `config.example.json` 或 `config.example.with-rotation.json`。
 
-`config.json` 文件有几个关键部分：
-- **`PROXY_URL`** (可选): 您可以为 API 请求设置代理，例如：`"PROXY_URL": "http://127.0.0.1:7890"`。
-- **`LOG`** (可选): 您可以通过将其设置为 `true` 来启用日志记录。日志文件将位于 `$HOME/.claude-code-router.log`。
-- **`APIKEY`** (可选): 您可以设置一个密钥来进行身份验证。设置后，客户端请求必须在 `Authorization` 请求头 (例如, `Bearer your-secret-key`) 或 `x-api-key` 请求头中提供此密钥。例如：`"APIKEY": "your-secret-key"`。
-- **`HOST`** (可选): 您可以设置服务的主机地址。如果未设置 `APIKEY`，出于安全考虑，主机地址将强制设置为 `127.0.0.1`，以防止未经授权的访问。例如：`"HOST": "0.0.0.0"`。
-- **`Providers`**: 用于配置不同的模型提供商。
-- **`Router`**: 用于设置路由规则。`default` 指定默认模型，如果未配置其他路由，则该模型将用于所有请求。
-
-这是一个综合示例：
-
-```json
-{
-  "APIKEY": "your-secret-key",
-  "PROXY_URL": "http://127.0.0.1:7890",
-  "LOG": true,
-  "Providers": [
-    {
-      "name": "openrouter",
-      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-      "api_key": "sk-xxx",
-      "models": [
-        "google/gemini-2.5-pro-preview",
-        "anthropic/claude-sonnet-4",
-        "anthropic/claude-3.5-sonnet"
-      ],
-      "transformer": { "use": ["openrouter"] }
-    },
-    {
-      "name": "deepseek",
-      "api_base_url": "https://api.deepseek.com/chat/completions",
-      "api_key": "sk-xxx",
-      "models": ["deepseek-chat", "deepseek-reasoner"],
-      "transformer": {
-        "use": ["deepseek"],
-        "deepseek-chat": { "use": ["tooluse"] }
-      }
-    },
-    {
-      "name": "ollama",
-      "api_base_url": "http://localhost:11434/v1/chat/completions",
-      "api_key": "ollama",
-      "models": ["qwen2.5-coder:latest"]
-    }
-  ],
-  "Router": {
-    "default": "deepseek,deepseek-chat",
-    "background": "ollama,qwen2.5-coder:latest",
-    "think": "deepseek,deepseek-reasoner",
-    "longContext": "openrouter,google/gemini-2.5-pro-preview"
-  }
-}
-```
-
-
-### 3. 使用 Router 运行 Claude Code
-
-使用 router 启动 Claude Code：
+### 3. 启动
 
 ```shell
 ccr code
 ```
 
-#### Providers
+## 📖 详细文档
 
-`Providers` 数组是您定义要使用的不同模型提供商的地方。每个提供商对象都需要：
-
--   `name`: 提供商的唯一名称。
--   `api_base_url`: 聊天补全的完整 API 端点。
--   `api_key`: 您提供商的 API 密钥。
--   `models`: 此提供商可用的模型名称列表。
--   `transformer` (可选): 指定用于处理请求和响应的转换器。
-
-#### Transformers
-
-Transformers 允许您修改请求和响应负载，以确保与不同提供商 API 的兼容性。
-
--   **全局 Transformer**: 将转换器应用于提供商的所有模型。在此示例中，`openrouter` 转换器将应用于 `openrouter` 提供商下的所有模型。
-    ```json
-     {
-       "name": "openrouter",
-       "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-       "api_key": "sk-xxx",
-       "models": [
-         "google/gemini-2.5-pro-preview",
-         "anthropic/claude-sonnet-4",
-         "anthropic/claude-3.5-sonnet"
-       ],
-       "transformer": { "use": ["openrouter"] }
-     }
-    ```
--   **特定于模型的 Transformer**: 将转换器应用于特定模型。在此示例中，`deepseek` 转换器应用于所有模型，而额外的 `tooluse` 转换器仅应用于 `deepseek-chat` 模型。
-    ```json
-     {
-       "name": "deepseek",
-       "api_base_url": "https://api.deepseek.com/chat/completions",
-       "api_key": "sk-xxx",
-       "models": ["deepseek-chat", "deepseek-reasoner"],
-       "transformer": {
-         "use": ["deepseek"],
-         "deepseek-chat": { "use": ["tooluse"] }
-       }
-     }
-    ```
-
--   **向 Transformer 传递选项**: 某些转换器（如 `maxtoken`）接受选项。要传递选项，请使用嵌套数组，其中第一个元素是转换器名称，第二个元素是选项对象。
-    ```json
-    {
-      "name": "siliconflow",
-      "api_base_url": "https://api.siliconflow.cn/v1/chat/completions",
-      "api_key": "sk-xxx",
-      "models": ["moonshotai/Kimi-K2-Instruct"],
-      "transformer": {
-        "use": [
-          [
-            "maxtoken",
-            {
-              "max_tokens": 16384
-            }
-          ]
-        ]
-      }
-    }
-    ```
-
-**可用的内置 Transformer：**
-
--   `deepseek`: 适配 DeepSeek API 的请求/响应。
--   `gemini`: 适配 Gemini API 的请求/响应。
--   `openrouter`: 适配 OpenRouter API 的请求/响应。
--   `groq`: 适配 groq API 的请求/响应
--   `maxtoken`: 设置特定的 `max_tokens` 值。
--   `tooluse`: 优化某些模型的工具使用(通过`tool_choice`参数)。
--   `gemini-cli` (实验性): 通过 Gemini CLI [gemini-cli.js](https://gist.github.com/musistudio/1c13a65f35916a7ab690649d3df8d1cd) 对 Gemini 的非官方支持。
-
-**自定义 Transformer:**
-
-您还可以创建自己的转换器，并通过 `config.json` 中的 `transformers` 字段加载它们。
-
-```json
-{
-  "transformers": [
-      {
-        "path": "$HOME/.claude-code-router/plugins/gemini-cli.js",
-        "options": {
-          "project": "xxx"
-        }
-      }
-  ]
-}
-```
-
-#### Router
-
-`Router` 对象定义了在不同场景下使用哪个模型：
-
--   `default`: 用于常规任务的默认模型。
--   `background`: 用于后台任务的模型。这可以是一个较小的本地模型以节省成本。
--   `think`: 用于推理密集型任务（如计划模式）的模型。
--   `longContext`: 用于处理长上下文（例如，> 60K 令牌）的模型。
-
-您还可以使用 `/model` 命令在 Claude Code 中动态切换模型：
-`/model provider_name,model_name`
-示例: `/model openrouter,anthropic/claude-3.5-sonnet`
-
+- **[使用说明.md](使用说明.md)** - 完整的使用指南和配置说明
+- **[API_KEY_ROTATION_README.md](API_KEY_ROTATION_README.md)** - API Key 轮询功能详细文档
+- **[项目动机和工作原理](blog/zh/项目初衷及原理.md)** - 项目背景和技术原理
+- **[或许我们能在Router中做更多事情](blog/zh/或许我们能在Router中做更多事情.md)** - 扩展功能讨论
 
 ## 🤖 GitHub Actions
 
-将 Claude Code Router 集成到您的 CI/CD 管道中。在设置 [Claude Code Actions](https://docs.anthropic.com/en/docs/claude-code/github-actions) 后，修改您的 `.github/workflows/claude.yaml` 以使用路由器：
+在 `.github/workflows/claude.yaml` 中配置：
 
 ```yaml
 name: Claude Code
@@ -237,13 +86,10 @@ name: Claude Code
 on:
   issue_comment:
     types: [created]
-  # ... other triggers
 
 jobs:
   claude:
-    if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      # ... other conditions
+    if: contains(github.event.comment.body, '@claude')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -253,8 +99,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
       - name: Prepare Environment
         run: |
@@ -268,28 +112,18 @@ jobs:
             "OPENAI_MODEL": "deepseek-chat"
           }
           EOF
-        shell: bash
 
       - name: Start Claude Code Router
         run: |
           nohup ~/.bun/bin/bunx @tellerlin/claude-code-router@latest start &
-        shell: bash
 
       - name: Run Claude Code
-        id: claude
         uses: anthropics/claude-code-action@beta
         env:
           ANTHROPIC_BASE_URL: http://localhost:3456
         with:
           anthropic_api_key: "any-string-is-ok"
 ```
-
-这种设置可以实现有趣的自动化，例如在非高峰时段运行任务以降低 API 成本。
-
-## 📝 深入阅读
-
--   [项目动机和工作原理](blog/zh/项目初衷及原理.md)
--   [也许我们可以用路由器做更多事情](blog/zh/或许我们能在Router中做更多事情.md)
 
 ## ❤️ 支持与赞助
 
