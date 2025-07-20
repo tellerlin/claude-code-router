@@ -66,14 +66,23 @@ mkdir -p ~/.claude-code-router
 
 **选项 A: 基本配置（单个 API Key）**
 ```bash
-# 复制基本配置模板
-cp config.example.json ~/.claude-code-router/config.json
+# 从安装的包中复制基本配置模板
+cp $(npm root -g)/@tellerlin/claude-code-router/config.example.json ~/.claude-code-router/config.json
 ```
 
 **选项 B: API Key 轮询配置（多个 API Key）**
 ```bash
-# 复制轮询配置模板
-cp config.example.with-rotation.json ~/.claude-code-router/config.json
+# 从安装的包中复制轮询配置模板
+cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
+```
+
+**替代方法（如果上面的方法不工作）：**
+```bash
+# 查找包的位置
+npm root -g
+
+# 然后从特定路径复制（替换为您的实际npm全局路径）
+cp /usr/local/lib/node_modules/@tellerlin/claude-code-router/config.example.json ~/.claude-code-router/config.json
 ```
 
 #### 步骤 3: 编辑配置文件
@@ -103,9 +112,10 @@ code ~/.claude-code-router/config.json
 - **路径**: `~/.claude-code-router/config.json`
 - **全局配置**: 此配置文件是全局的，适用于您系统上的所有项目
 - **安全提醒**: 配置文件包含敏感的 API Keys，绝不应该提交到版本控制
-- **示例文件**: 
+- **示例文件**（在安装的包中可用）: 
   - `config.example.json` - 基本配置示例
   - `config.example.with-rotation.json` - 包含API Key轮询的配置示例
+- **包位置**: 使用 `npm root -g` 查找包安装位置
 
 #### 基本配置示例
 

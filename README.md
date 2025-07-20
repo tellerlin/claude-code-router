@@ -68,14 +68,23 @@ Choose one of the following options:
 
 **Option A: Basic Configuration (Single API Key)**
 ```bash
-# Copy the basic configuration template
-cp config.example.json ~/.claude-code-router/config.json
+# Copy the basic configuration template from the installed package
+cp $(npm root -g)/@tellerlin/claude-code-router/config.example.json ~/.claude-code-router/config.json
 ```
 
 **Option B: API Key Rotation Configuration (Multiple API Keys)**
 ```bash
-# Copy the rotation configuration template
-cp config.example.with-rotation.json ~/.claude-code-router/config.json
+# Copy the rotation configuration template from the installed package
+cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
+```
+
+**Alternative method (if the above doesn't work):**
+```bash
+# Find the package location
+npm root -g
+
+# Then copy from the specific path (replace with your actual npm global path)
+cp /usr/local/lib/node_modules/@tellerlin/claude-code-router/config.example.json ~/.claude-code-router/config.json
 ```
 
 #### Step 3: Edit Configuration File
@@ -105,9 +114,10 @@ Replace the placeholder values in the configuration file:
 - **Path**: `~/.claude-code-router/config.json`
 - **Global Configuration**: This configuration file is global and applies to all projects on your system
 - **Security Note**: The configuration file contains sensitive API keys and should never be committed to version control
-- **Example files**: 
+- **Example files** (available in the installed package): 
   - `config.example.json` - Basic configuration example
   - `config.example.with-rotation.json` - Configuration example with API Key rotation
+- **Package location**: Use `npm root -g` to find where the package is installed
 
 #### Basic Configuration Example
 
@@ -191,8 +201,8 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 ### Configuration
 
 #### Basic Rotation Configuration
-```json
-{
+    ```json
+     {
   "name": "gemini",
   "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
   "api_keys": ["sk-xxx1", "sk-xxx2", "sk-xxx3"],
@@ -204,8 +214,8 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 ```
 
 #### Advanced Rotation Configuration
-```json
-{
+    ```json
+     {
   "name": "gemini",
   "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
   "api_keys": [
@@ -232,7 +242,7 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 ```
 
 #### Complete Configuration with Router Rules
-```json
+    ```json
 {
   "APIKEY": "your-secret-key",
   "PROXY_URL": "http://127.0.0.1:7890",
@@ -269,9 +279,9 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
     "background": "gemini,gemini-2.5-flash",
     "think": "gemini,gemini-2.5-pro",
     "longContext": "gemini,gemini-2.5-pro"
-  }
-}
-```
+      }
+    }
+    ```
 
 ### Rotation Strategies
 
