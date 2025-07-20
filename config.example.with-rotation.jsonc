@@ -21,8 +21,8 @@
       "retry_on_failure": true,  // Retry on failure / 失败时重试
       "max_retries": 3,  // Maximum retry attempts / 最大重试次数
       "models": [
-        "deepseek-chat",  // Remove comment to enable this model / 删除注释以启用此模型
-        "deepseek-reasoner"  // Remove comment to enable this model / 删除注释以启用此模型
+        // "deepseek-chat",  // Remove comment to enable this model / 删除注释以启用此模型
+        // "deepseek-reasoner"  // Remove comment to enable this model / 删除注释以启用此模型
       ],
       "transformer": {
         "use": ["deepseek"],
@@ -53,10 +53,10 @@
       "retry_on_failure": true,
       "max_retries": 2,
       "models": [
-        "google/gemini-2.5-pro-preview",  // Remove comment to enable Gemini Pro / 删除注释以启用Gemini Pro
-        "anthropic/claude-3.5-sonnet",  // Remove comment to enable Claude 3.5 / 删除注释以启用Claude 3.5
-        "meta-llama/llama-3.1-8b-instruct",  // Remove comment to enable Llama 3.1 / 删除注释以启用Llama 3.1
-        "openai/gpt-4o-mini"  // Remove comment to enable GPT-4o Mini / 删除注释以启用GPT-4o Mini
+        // "google/gemini-2.5-pro-preview",  // Remove comment to enable Gemini Pro / 删除注释以启用Gemini Pro
+        // "anthropic/claude-3.5-sonnet",  // Remove comment to enable Claude 3.5 / 删除注释以启用Claude 3.5
+        // "meta-llama/llama-3.1-8b-instruct",  // Remove comment to enable Llama 3.1 / 删除注释以启用Llama 3.1
+        // "openai/gpt-4o-mini"  // Remove comment to enable GPT-4o Mini / 删除注释以启用GPT-4o Mini
       ],
       "transformer": { "use": ["openrouter"] }
     },
@@ -85,9 +85,9 @@
       "api_base_url": "http://localhost:11434/v1/chat/completions",
       "api_key": "ollama",  // Ollama doesn't need real API key / Ollama不需要真实API密钥
       "models": [
-        "qwen2.5-coder:latest",  // Remove comment to enable Qwen Coder / 删除注释以启用Qwen Coder
-        "codellama:latest",      // Remove comment to enable Code Llama / 删除注释以启用Code Llama
-        "llama3.2:latest"        // Remove comment to enable Llama 3.2 / 删除注释以启用Llama 3.2
+        // "qwen2.5-coder:latest",  // Remove comment to enable Qwen Coder / 删除注释以启用Qwen Coder
+        // "codellama:latest",      // Remove comment to enable Code Llama / 删除注释以启用Code Llama
+        // "llama3.2:latest"        // Remove comment to enable Llama 3.2 / 删除注释以启用Llama 3.2
       ]
     }
   ],

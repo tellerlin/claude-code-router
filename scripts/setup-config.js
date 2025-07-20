@@ -80,7 +80,7 @@ async function setupConfig() {
   if (fs.existsSync(CONFIG_FILE)) {
     console.log(`${msg.configExists} ${CONFIG_FILE}`);
     
-    const answer = await askQuestion(`${msg.overwritePrompt}\n${msg.overwritePromptZh}\n`);
+    const answer = await askQuestion(`${msg.overwritePrompt}\n`);
     
     if (answer !== 'y' && answer !== 'yes') {
       console.log(`\n${msg.cancelled}`);

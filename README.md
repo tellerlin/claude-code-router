@@ -95,6 +95,8 @@ cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jso
 cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jsonc ~/.claude-code-router/config.json
 ```
 
+This template has all models commented out by default. To enable a model, simply remove the `//` comment from the beginning of the model line.
+
 **Alternative method (if the above doesn't work):**
 ```bash
 # Find the package location
