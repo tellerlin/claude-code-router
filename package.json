@@ -1,10 +1,10 @@
 {
   "name": "@tellerlin/claude-code-router",
-  "version": "1.0.34",
+  "version": "1.0.35",
   "description": "Use Claude Code without an Anthropics account and route it to another LLM provider",
   "bin": {
-    "ccr": "./dist/cli.js",
-    "ccr-setup": "./scripts/setup-config.js"
+    "ccr": "dist/cli.js",
+    "ccr-setup": "scripts/setup-config.js"
   },
   "scripts": {
     "build": "esbuild src/cli.ts --bundle --platform=node --outfile=dist/cli.js && shx cp node_modules/tiktoken/tiktoken_bg.wasm dist/tiktoken_bg.wasm"
