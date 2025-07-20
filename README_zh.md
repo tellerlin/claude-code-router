@@ -194,7 +194,8 @@ Claude Code Router 现在支持多个 API Key 轮询功能，可以自动在多�
   "api_keys": ["sk-xxx1", "sk-xxx2", "sk-xxx3"],
   "enable_rotation": true,
   "rotation_strategy": "round_robin",
-  "models": ["gemini-2.5-flash", "gemini-2.5-pro"]
+  "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
+  "transformer": { "use": ["gemini"] }
 }
 ```
 
@@ -221,7 +222,50 @@ Claude Code Router 现在支持多个 API Key 轮询功能，可以自动在多�
   "rotation_strategy": "weighted",
   "retry_on_failure": true,
   "max_retries": 3,
-  "models": ["gemini-2.5-flash", "gemini-2.5-pro"]
+  "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
+  "transformer": { "use": ["gemini"] }
+}
+```
+
+#### 3. 完整配置（包含路由规则）
+```json
+{
+  "APIKEY": "your-secret-key",
+  "PROXY_URL": "http://127.0.0.1:7890",
+  "LOG": true,
+  "HOST": "0.0.0.0",
+  "Providers": [
+    {
+      "name": "gemini",
+      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "api_keys": [
+        {
+          "key": "sk-xxx1",
+          "weight": 2,
+          "maxFailures": 5,
+          "cooldownTime": 60000
+        },
+        {
+          "key": "sk-xxx2",
+          "weight": 1,
+          "maxFailures": 3,
+          "cooldownTime": 30000
+        }
+      ],
+      "enable_rotation": true,
+      "rotation_strategy": "weighted",
+      "retry_on_failure": true,
+      "max_retries": 3,
+      "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
+      "transformer": { "use": ["gemini"] }
+    }
+  ],
+  "Router": {
+    "default": "gemini,gemini-2.5-pro",
+    "background": "gemini,gemini-2.5-flash",
+    "think": "gemini,gemini-2.5-pro",
+    "longContext": "gemini,gemini-2.5-pro"
+  }
 }
 ```
 
@@ -376,10 +420,15 @@ ccr code "写一个 Hello World 程序"
 
 路由规则定义不同场景使用的模型：
 
-- **`default`**: 默认模型，用于一般任务
-- **`background`**: 后台任务模型，通常使用较小的本地模型节省成本
-- **`think`**: 思考模型，用于推理密集型任务
-- **`longContext`**: 长上下文模型，处理超过 60K token 的对话
+- **`default`**: 默认模型，用于一般任务（使用 gemini-2.5-pro 获得最佳质量）
+- **`background`**: 后台任务模型（使用 gemini-2.5-flash 进行更快、更便宜的处理）
+- **`think`**: 思考模型，用于推理密集型任务（使用 gemini-2.5-pro 获得更好的推理能力）
+- **`longContext`**: 长上下文模型，处理超过 60K token 的对话（使用 gemini-2.5-pro 进行上下文处理）
+
+#### 智能模型选择策略
+- **后台任务**（如代码生成、简单问答）→ **gemini-2.5-flash**（更快、更便宜）
+- **复杂推理、分析、创意任务** → **gemini-2.5-pro**（更好的质量、更强的能力）
+- **长对话、上下文密集型任务** → **gemini-2.5-pro**（更好的上下文理解）
 
 ## 🔧 转换器 (Transformers)
 

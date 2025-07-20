@@ -196,7 +196,8 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
   "api_keys": ["sk-xxx1", "sk-xxx2", "sk-xxx3"],
   "enable_rotation": true,
   "rotation_strategy": "round_robin",
-  "models": ["gemini-2.5-flash", "gemini-2.5-pro"]
+  "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
+  "transformer": { "use": ["gemini"] }
 }
 ```
 
@@ -223,7 +224,50 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
   "rotation_strategy": "weighted",
   "retry_on_failure": true,
   "max_retries": 3,
-  "models": ["gemini-2.5-flash", "gemini-2.5-pro"]
+  "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
+  "transformer": { "use": ["gemini"] }
+}
+```
+
+#### Complete Configuration with Router Rules
+```json
+{
+  "APIKEY": "your-secret-key",
+  "PROXY_URL": "http://127.0.0.1:7890",
+  "LOG": true,
+  "HOST": "0.0.0.0",
+  "Providers": [
+    {
+      "name": "gemini",
+      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "api_keys": [
+        {
+          "key": "sk-xxx1",
+          "weight": 2,
+          "maxFailures": 5,
+          "cooldownTime": 60000
+        },
+        {
+          "key": "sk-xxx2",
+          "weight": 1,
+          "maxFailures": 3,
+          "cooldownTime": 30000
+        }
+      ],
+      "enable_rotation": true,
+      "rotation_strategy": "weighted",
+      "retry_on_failure": true,
+      "max_retries": 3,
+      "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
+      "transformer": { "use": ["gemini"] }
+    }
+  ],
+  "Router": {
+    "default": "gemini,gemini-2.5-pro",
+    "background": "gemini,gemini-2.5-flash",
+    "think": "gemini,gemini-2.5-pro",
+    "longContext": "gemini,gemini-2.5-pro"
+  }
 }
 ```
 
@@ -378,10 +422,15 @@ Each provider needs to configure the following fields:
 
 Routing rules define which model to use for different scenarios:
 
-- **`default`**: Default model for general tasks
-- **`background`**: Background task model, usually using smaller local models to save costs
-- **`think`**: Thinking model for reasoning-intensive tasks
-- **`longContext`**: Long context model for handling conversations over 60K tokens
+- **`default`**: Default model for general tasks (uses gemini-2.5-pro for best quality)
+- **`background`**: Background task model (uses gemini-2.5-flash for faster, cheaper processing)
+- **`think`**: Thinking model for reasoning-intensive tasks (uses gemini-2.5-pro for better reasoning)
+- **`longContext`**: Long context model for handling conversations over 60K tokens (uses gemini-2.5-pro for context handling)
+
+#### Smart Model Selection Strategy
+- **Background tasks** (like code generation, simple Q&A) → **gemini-2.5-flash** (faster, cheaper)
+- **Complex reasoning, analysis, creative tasks** → **gemini-2.5-pro** (better quality, more capable)
+- **Long conversations, context-heavy tasks** → **gemini-2.5-pro** (better context understanding)
 
 ## 🔧 Transformers
 
