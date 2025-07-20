@@ -51,11 +51,11 @@ npm install -g @anthropic-ai/claude-code
 然后，安装 Claude Code Router：
 
 ```shell
-# 安装原始版本
-npm install -g @musistudio/claude-code-router
-
-# 或安装包含 API Key 轮询功能的 Fork 版本
+# 安装包含 API Key 轮询功能的 Fork 版本
 npm install -g @tellerlin/claude-code-router
+
+# 或安装原始版本
+npm install -g @musistudio/claude-code-router
 ```
 
 ### 2. 配置
@@ -272,7 +272,7 @@ jobs:
 
       - name: Start Claude Code Router
         run: |
-          nohup ~/.bun/bin/bunx @musistudio/claude-code-router@1.0.8 start &
+          nohup ~/.bun/bin/bunx @tellerlin/claude-code-router@latest start &
         shell: bash
 
       - name: Run Claude Code

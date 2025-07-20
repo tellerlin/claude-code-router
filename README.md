@@ -53,11 +53,11 @@ npm install -g @anthropic-ai/claude-code
 Then, install Claude Code Router:
 
 ```shell
-# Install original version
-npm install -g @musistudio/claude-code-router
-
-# Or install this fork version with API Key rotation
+# Install this fork version with API Key rotation
 npm install -g @tellerlin/claude-code-router
+
+# Or install original version
+npm install -g @musistudio/claude-code-router
 ```
 
 ### 2. Configuration
@@ -275,7 +275,7 @@ jobs:
 
       - name: Start Claude Code Router
         run: |
-          nohup ~/.bun/bin/bunx @musistudio/claude-code-router@1.0.8 start &
+          nohup ~/.bun/bin/bunx @tellerlin/claude-code-router@latest start &
         shell: bash
 
       - name: Run Claude Code
