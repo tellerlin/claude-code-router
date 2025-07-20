@@ -293,20 +293,14 @@ jobs:
 
 ## ❤️ 支持与赞助
 
-如果您觉得这个项目有帮助，请考虑赞助它的开发。非常感谢您的支持！
+**这是原始项目的Fork版本。请支持原始作者：**
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F31GN2GM)
+- **原始项目**: [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router)
+- **支持原始作者**: 如果您觉得这个项目有帮助，请考虑在[原始仓库](https://github.com/musistudio/claude-code-router)赞助原始开发。
 
-<table>
-  <tr>
-    <td><img src="/blog/images/alipay.jpg" width="200" alt="Alipay" /></td>
-    <td><img src="/blog/images/wechat.jpg" width="200" alt="WeChat Pay" /></td>
-  </tr>
-</table>
+### 原始项目赞助商
 
-### 我们的赞助商
-
-非常感谢所有赞助商的慷慨支持！
+非常感谢所有原始项目赞助商的慷慨支持！
 
 - @Simon Leischnig
 - [@duanshuaimin](https://github.com/duanshuaimin)
@@ -338,8 +332,7 @@ jobs:
 - *涯
 - *:-）
 
-（如果您的名字被屏蔽，请通过我的主页电子邮件与我联系，以便使用您的 GitHub 用户名进行更新。）
-
+（如果您的名字被屏蔽，请通过原始作者的主页电子邮件与他们联系，以便使用您的 GitHub 用户名进行更新。）
 
 ## 交流群
 <img src="/blog/images/wechat_group.jpg" width="200" alt="wechat_group" />

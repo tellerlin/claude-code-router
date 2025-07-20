@@ -296,20 +296,14 @@ This setup allows for interesting automations, like running tasks during off-pea
 
 ## ❤️ Support & Sponsoring
 
-If you find this project helpful, please consider sponsoring its development. Your support is greatly appreciated!
+**This is a fork of the original project. Please support the original author:**
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F31GN2GM)
+- **Original Project**: [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router)
+- **Support Original Author**: If you find this project helpful, please consider sponsoring the original development at the [original repository](https://github.com/musistudio/claude-code-router).
 
-<table>
-  <tr>
-    <td><img src="/blog/images/alipay.jpg" width="200" alt="Alipay" /></td>
-    <td><img src="/blog/images/wechat.jpg" width="200" alt="WeChat Pay" /></td>
-  </tr>
-</table>
+### Original Project Sponsors
 
-### Our Sponsors
-
-A huge thank you to all our sponsors for their generous support!
+A huge thank you to all the original project sponsors for their generous support!
 
 - @Simon Leischnig
 - [@duanshuaimin](https://github.com/duanshuaimin)
@@ -341,4 +335,4 @@ A huge thank you to all our sponsors for their generous support!
 - *涯
 - *:-）
 
-(If your name is masked, please contact me via my homepage email to update it with your GitHub username.)
+(If your name is masked, please contact the original author via their homepage email to update it with your GitHub username.)
