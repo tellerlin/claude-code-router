@@ -142,7 +142,6 @@ Replace the placeholder values in the configuration file:
 
 ```json
 {
-  // "APIKEY": "your-access-key",  // Optional: Access control key
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",
@@ -173,9 +172,14 @@ Replace the placeholder values in the configuration file:
     "background": "ollama,qwen2.5-coder:latest",
     "think": "deepseek,deepseek-reasoner",
     "longContext": "openrouter,google/gemini-2.5-pro-preview"
-  }
+  },
+  "APIKEY_optional": "(Optional) Set this field to enable global API authentication. Remove this line if not needed."
 }
 ```
+
+> **Note:**
+> - The `APIKEY` field is **optional**. Only add it if you want to enable global API authentication for all requests. If not needed, simply remove or ignore this field.
+> - By default, the setup script and templates do **not** include a global APIKEY.
 
 ### 3. Running
 

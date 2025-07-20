@@ -104,6 +104,11 @@ async function setupConfig() {
     console.log(`${msg.step1}`);
     console.log(`${msg.step2}`);
     console.log(`\n${msg.tip}`);
+    if (lang === 'en') {
+      console.log("\nNote: The generated config does NOT include a global APIKEY by default. If you want to enable global API authentication, add an 'APIKEY' field to your config.json. See README for details.");
+    } else {
+      console.log("\n注意：默认生成的配置文件不包含全局 APIKEY。如果需要全局鉴权，请手动在 config.json 中添加 'APIKEY' 字段，详见 README。");
+    }
     console.log(`\n${msg.success}`);
   } catch (error) {
     console.log(`${msg.failed} ${error.message}`);

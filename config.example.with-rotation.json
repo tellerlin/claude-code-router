@@ -1,5 +1,5 @@
 {
-  "APIKEY": "your-secret-key",
+  "APIKEY_optional": "(Optional) Set this field to enable global API authentication. Remove this line if not needed.",
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",

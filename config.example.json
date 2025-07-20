@@ -16,6 +16,6 @@
     "think": "gemini,gemini-2.5-pro",
     "longContext": "gemini,gemini-2.5-pro"
   },
-  "APIKEY": "your-secret-key",
+  "APIKEY_optional": "(Optional) Set this field to enable global API authentication. Remove this line if not needed.",
   "HOST": "0.0.0.0"
 }
