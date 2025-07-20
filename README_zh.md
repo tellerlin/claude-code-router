@@ -87,6 +87,12 @@ cp $(npm root -g)/@tellerlin/claude-code-router/config.example.json ~/.claude-co
 cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
+**选项 C: 带注释的配置模板（推荐给初学者）**
+```bash
+# 复制带详细注释的配置模板
+cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.jsonc ~/.claude-code-router/config.json
+```
+
 **替代方法（如果上面的方法不工作）：**
 ```bash
 # 查找包的位置
@@ -126,6 +132,7 @@ code ~/.claude-code-router/config.json
 - **示例文件**（在安装的包中可用）: 
   - `config.example.json` - 基本配置示例
   - `config.example.with-rotation.json` - 包含API Key轮询的配置示例
+  - `config.example.with-rotation.jsonc` - 带详细注释的配置模板（推荐给初学者）
 - **包位置**: 使用 `npm root -g` 查找包安装位置
 
 #### 基本配置示例
