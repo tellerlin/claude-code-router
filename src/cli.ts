@@ -121,12 +121,12 @@ async function main() {
       }
       break;
     case "test":
-      // 自动调用 scripts/ccr-test.ts，兼容 Windows 路径
+      // 自动调用 scripts/ccr-test.js，兼容 Windows 路径
       try {
-        const tsNodeCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-        const scriptPath = require('path').join(__dirname, '../scripts/ccr-test.ts');
+        const nodeCmd = process.execPath; // 使用当前 node 解释器
+        const scriptPath = require('path').join(__dirname, '../scripts/ccr-test.js');
         const { spawn } = require('child_process');
-        const child = spawn(tsNodeCmd, ['ts-node', scriptPath], { stdio: 'inherit' });
+        const child = spawn(nodeCmd, [scriptPath], { stdio: 'inherit' });
         child.on('exit', (code: number) => process.exit(code));
       } catch (e) {
         console.error('Failed to run test script:', e);
