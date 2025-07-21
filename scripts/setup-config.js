@@ -99,12 +99,31 @@ async function setupConfig() {
 
   try {
     const defaultConfig = {
-      PROXY_URL: "socks5h://127.0.0.1:7891", // 默认使用 socks5h
+      APIKEY_optional: "(Optional) Set this field to enable global API authentication. Remove this line if not needed.",
+      PROXY_URL: "socks5h://127.0.0.1:7891",
       LOG: true,
       HOST: "0.0.0.0",
       Providers: [
-        // ... existing code ...
-      ]
+        {
+          name: "gemini",
+          api_base_url: "https://generativelanguage.googleapis.com/v1beta/models/",
+          api_keys: [
+            "YOUR_GEMINI_API_KEY_HERE"
+          ],
+          enable_rotation: true,
+          rotation_strategy: "round_robin",
+          retry_on_failure: true,
+          max_retries: 3,
+          models: ["gemini-2.5-pro"],
+          transformer: { use: ["gemini"] }
+        }
+      ],
+      Router: {
+        default: "gemini,gemini-2.5-pro",
+        background: "gemini,gemini-2.5-pro",
+        think: "gemini,gemini-2.5-pro",
+        longContext: "gemini,gemini-2.5-pro"
+      }
     };
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaultConfig, null, 2));
     console.log(`${msg.configCreated} ${CONFIG_FILE}`);
