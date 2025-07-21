@@ -203,6 +203,15 @@ After configuration, simply run:
 ccr code
 ```
 
+#### Test All API Keys and Models
+To quickly verify all your configured API keys and models are working, use:
+
+```bash
+ccr test
+```
+
+This will automatically test every model+apikey combination in your config.json and print detailed logs for troubleshooting.
+
 #### Verify Installation
 To check if everything is working:
 
@@ -381,6 +390,9 @@ ccr rotation
 
 # Execute code command
 ccr code
+
+# Test all models and API keys in config.json
+ccr test
 
 # View version
 ccr -v
@@ -571,6 +583,13 @@ Claude Code Router passes all parameters directly to the original Claude Code, s
    # or
    lsof -i :3456
    ```
+
+6. **Test All API Keys and Models**:
+   ```bash
+   # Use the built-in test command to check all configured API keys and models
+   ccr test
+   ```
+   This will help you quickly identify which key or model is failing and provide detailed error logs.
 
 ### API Key Rotation Issues
 

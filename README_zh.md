@@ -178,7 +178,7 @@ code ~/.claude-code-router/config.json
 ### 3. 启动
 
 #### 首次设置
-如果这是您第一次运行该工具，它将引导您完成交互式设置：
+如果这是您第一次运行该工具，它会引导您完成交互式设置：
 
 ```bash
 ccr code
@@ -197,8 +197,17 @@ ccr code
 ccr code
 ```
 
+#### 一键测试所有 API Key 和模型
+要快速验证所有配置的 API Key 和模型是否可用，可运行：
+
+```bash
+ccr test
+```
+
+该命令会自动测试 config.json 中所有 Provider 的 model+apikey 组合，并输出详细日志，便于排查。
+
 #### 验证安装
-检查是否一切正常：
+检查一切是否正常：
 
 ```bash
 # 检查服务状态
@@ -375,6 +384,9 @@ ccr rotation
 # 执行代码命令
 ccr code
 
+# 一键测试所有API Key和模型
+ccr test
+
 # 查看版本
 ccr -v
 
@@ -469,170 +481,4 @@ ccr code "写一个 Hello World 程序"
 
 - **`deepseek`**: 适配 DeepSeek API
 - **`gemini`**: 适配 Gemini API
-- **`openrouter`**: 适配 OpenRouter API
-- **`groq`**: 适配 Groq API
-- **`maxtoken`**: 设置最大 token 数
-- **`tooluse`**: 优化工具调用
-- **`gemini-cli`** (实验性): 通过 Gemini CLI 支持
-
-## 🔍 常见问题解答
-
-### Q: Gemini 是否支持多个 API Key 轮询？
-
-**A**: **是的！** 现在 Claude Code Router 完全支持多个 API Key 轮询功能。您可以通过以下方式配置：
-
-#### 基本轮询配置
-```json
-{
-  "name": "gemini",
-  "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
-  "api_keys": ["sk-xxx1", "sk-xxx2", "sk-xxx3"],
-  "enable_rotation": true,
-  "rotation_strategy": "round_robin",
-  "models": ["gemini-2.5-flash", "gemini-2.5-pro"]
-}
-```
-
-### Q: 如何启用 `--dangerously-skip-permissions` 参数？
-
-**A**: 直接使用以下命令：
-
-```bash
-ccr code --dangerously-skip-permissions
-```
-
-Claude Code Router 会将所有参数直接传递给原始的 Claude Code，因此支持所有 Claude Code 的原生参数。
-
-### Q: 如何查看日志？
-
-**A**: 在配置文件中设置 `"LOG": true`，日志文件将保存在 `$HOME/.claude-code-router.log`。
-
-### Q: 如何重置API Key状态？
-
-**A**: 目前系统会自动管理API Key状态。失败的Key会在冷却期后自动恢复，或者您可以重启服务来重置所有状态。
-
-### Q: 支持哪些轮询策略？
-
-**A**: 支持4种轮询策略：
-- **`round_robin`**: 轮询方式，按顺序使用每个API Key
-- **`random`**: 随机选择API Key
-- **`weighted`**: 加权轮询，根据权重分配请求
-- **`least_used`**: 最少使用优先，选择最近使用最少的Key
-
-## 🛠️ 故障排除
-
-### 服务启动失败
-
-1. **检查配置文件**:
-   ```bash
-   # 验证配置文件是否存在
-   ls -la ~/.claude-code-router/config.json
-   
-   # 检查 JSON 语法
-   cat ~/.claude-code-router/config.json | jq .
-   ```
-
-2. **验证 API Keys**:
-   ```bash
-   # 使用 curl 测试您的 API key（以 DeepSeek 为例）
-   curl -X POST "https://api.deepseek.com/chat/completions" \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer YOUR_API_KEY" \
-     -d '{"model":"deepseek-chat","messages":[{"role":"user","content":"Hello"}]}'
-   ```
-
-3. **检查网络和代理**:
-   ```bash
-   # 测试网络连接
-   ping api.deepseek.com
-   
-   # 如果配置了代理，测试代理
-   curl --proxy http://127.0.0.1:7890 https://api.deepseek.com
-   ```
-
-4. **查看日志**:
-   ```bash
-   # 在 config.json 中启用日志: "LOG": true
-   # 然后检查日志文件
-   tail -f ~/.claude-code-router.log
-   ```
-
-5. **检查端口占用**:
-   ```bash
-   # 检查端口 3456 是否被占用
-   netstat -tulpn | grep 3456
-   # 或者
-   lsof -i :3456
-   ```
-
-### API Key 轮询问题
-
-1. **所有API Key都不可用**: 检查API Key是否有效，查看失败次数和冷却时间
-2. **轮询策略不生效**: 确认 `enable_rotation` 设置为 `true`
-3. **重试失败**: 检查 `retry_on_failure` 和 `max_retries` 配置
-4. **权重轮询不均衡**: 确认 `weight` 值设置正确
-
-### 模型切换不生效
-
-1. 确认模型名称格式正确：`provider_name,model_name`
-2. 检查提供商配置是否正确
-3. 验证模型是否在提供商的支持列表中
-
-## 🤖 GitHub Actions
-
-在 `.github/workflows/claude.yaml` 中配置：
-
-```yaml
-name: Claude Code
-
-on:
-  issue_comment:
-    types: [created]
-
-jobs:
-  claude:
-    if: contains(github.event.comment.body, '@claude')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-      issues: read
-      id-token: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Prepare Environment
-        run: |
-          curl -fsSL https://bun.sh/install | bash
-          mkdir -p $HOME/.claude-code-router
-          cat << 'EOF' > $HOME/.claude-code-router/config.json
-          {
-            "log": true,
-            "OPENAI_API_KEY": "${{ secrets.OPENAI_API_KEY }}",
-            "OPENAI_BASE_URL": "https://api.deepseek.com",
-            "OPENAI_MODEL": "deepseek-chat"
-          }
-          EOF
-
-      - name: Start Claude Code Router
-        run: |
-          nohup ~/.bun/bin/bunx @tellerlin/claude-code-router@latest start &
-
-      - name: Run Claude Code
-        uses: anthropics/claude-code-action@beta
-        env:
-          ANTHROPIC_BASE_URL: http://localhost:3456
-        with:
-          anthropic_api_key: "any-string-is-ok"
-```
-
-## 📖 深入阅读
-
-- **[项目动机和工作原理](blog/zh/项目初衷及原理.md)** - 项目背景和技术原理
-- **[也许我们可以用路由器做更多事情](blog/zh/或许我们能在Router中做更多事情.md)** - 扩展功能讨论
-
-
-
-## 交流群
-<img src="/blog/images/wechat_group.jpg" width="200" alt="wechat_group" />
+- **`
