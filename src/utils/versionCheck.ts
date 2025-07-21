@@ -7,8 +7,13 @@ const { execSync } = require('child_process');
 const VERSION_FILE = path.join(os.homedir(), '.claude-code-router', '.version-check');
 
 export function getCurrentVersion(): string {
-  // Use a simple version string instead of reading package.json
-  return '1.0.32';
+  try {
+    // 兼容 esbuild bundle，使用 require 方式
+    const pkg = require('../../package.json');
+    return pkg.version;
+  } catch {
+    return 'unknown';
+  }
 }
 
 export function getLatestVersion(): string | null {
