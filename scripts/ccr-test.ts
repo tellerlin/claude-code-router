@@ -59,7 +59,7 @@ function getTestEndpoint(provider: Provider, model: string): { url: string; meth
   }
 }
 
-async function testProviderModelKey(provider: Provider, model: string, apiKey: string) {
+async function testProviderModelKey(provider: Provider, model: string, apiKey: string, agent: any) {
   const { url, method, body, headers } = getTestEndpoint(provider, model);
   // 自动适配主流API的鉴权方式
   if (provider.api_base_url.includes('openai') || provider.api_base_url.includes('deepseek') || provider.api_base_url.includes('openrouter')) {
@@ -120,7 +120,7 @@ async function main() {
     }
     for (const model of provider.models) {
       for (const apiKey of apiKeys) {
-        await testProviderModelKey(provider, model, apiKey);
+        await testProviderModelKey(provider, model, apiKey, agent);
       }
     }
   }
