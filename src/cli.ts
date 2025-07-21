@@ -4,7 +4,7 @@ import { showStatus, showDetailedRotationStatus } from "./utils/status";
 import { executeCodeCommand } from "./utils/codeCommand";
 import { cleanupPidFile, isServiceRunning } from "./utils/processCheck";
 import { showVersionInfo, showUpdatePrompt, shouldShowUpdatePrompt } from "./utils/versionCheck";
-import { version } from "../package.json";
+const version = require(require('path').join(__dirname, '../package.json')).version;
 import { spawn } from "child_process";
 import { PID_FILE, REFERENCE_COUNT_FILE } from "./constants";
 import { existsSync, readFileSync } from "fs";
@@ -21,6 +21,7 @@ Commands:
   status        Show service status
   rotation      Show API key rotation status
   code          Execute code command
+  test          Test all models and API keys in config.json
   -v, version   Show version information
   -h, help      Show help information
 
@@ -28,6 +29,7 @@ Example:
   ccr start
   ccr code "Write a Hello World"
   ccr rotation  # Show detailed API key rotation status
+  ccr test      # Test all models and API keys in config.json
 `;
 
 async function waitForService(
@@ -116,6 +118,19 @@ async function main() {
         }
       } else {
         executeCodeCommand(process.argv.slice(3));
+      }
+      break;
+    case "test":
+      // 自动调用 scripts/ccr-test.ts，兼容 Windows 路径
+      try {
+        const tsNodeCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+        const scriptPath = require('path').join(__dirname, '../scripts/ccr-test.ts');
+        const { spawn } = require('child_process');
+        const child = spawn(tsNodeCmd, ['ts-node', scriptPath], { stdio: 'inherit' });
+        child.on('exit', (code: number) => process.exit(code));
+      } catch (e) {
+        console.error('Failed to run test script:', e);
+        process.exit(1);
       }
       break;
     case "-v":
