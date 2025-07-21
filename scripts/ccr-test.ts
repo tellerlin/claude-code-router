@@ -14,11 +14,16 @@ interface Provider {
 }
 
 function loadConfig(): any {
+  console.log(`[DEBUG] Loading config from: ${CONFIG_PATH}`);
   if (!fs.existsSync(CONFIG_PATH)) {
     console.error(`Config file not found: ${CONFIG_PATH}`);
     process.exit(1);
   }
-  return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+  const configContent = fs.readFileSync(CONFIG_PATH, 'utf-8');
+  console.log(`[DEBUG] Config file size: ${configContent.length} bytes`);
+  const config = JSON.parse(configContent);
+  console.log(`[DEBUG] Config loaded successfully. PROXY_URL in config: ${config.PROXY_URL || 'NOT_SET'}`);
+  return config;
 }
 
 function getApiKeys(provider: Provider): string[] {
@@ -69,9 +74,28 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
   } else {
     headers['Authorization'] = `Bearer ${apiKey}`;
   }
+  
+  console.log(`[DEBUG] Testing ${provider.name}/${model} with key ${apiKey.slice(0,8)}...`);
+  console.log(`[DEBUG] Request URL: ${url}`);
+  console.log(`[DEBUG] Request method: ${method}`);
+  console.log(`[DEBUG] Request headers: ${JSON.stringify(headers)}`);
+  console.log(`[DEBUG] Request body: ${body || 'NO_BODY'}`);
+  console.log(`[DEBUG] Agent configured: ${agent ? 'YES' : 'NO'}`);
+  if (agent) {
+    console.log(`[DEBUG] Agent type: ${agent.constructor.name}`);
+    console.log(`[DEBUG] Agent proxy: ${agent.proxy || agent.uri || 'UNKNOWN'}`);
+  }
+  
   const start = Date.now();
   try {
-    const res = await fetch(url, { method, headers, body, agent });
+    const fetchOptions: any = { method, headers };
+    if (body) fetchOptions.body = body;
+    if (agent) fetchOptions.agent = agent;
+    
+    console.log(`[DEBUG] Final fetch options: ${JSON.stringify(fetchOptions, null, 2)}`);
+    console.log(`[DEBUG] Making fetch request...`);
+    
+    const res = await fetch(url, fetchOptions);
     const text = await res.text();
     let json: any = null;
     try { json = JSON.parse(text); } catch {}
@@ -88,13 +112,27 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
     console.error(`[ERROR] Provider: ${provider.name} | Model: ${model} | Key: ${apiKey.slice(0,8)}...`);
     console.error(`  URL: ${url}`);
     console.error(`  Request: ${body || ''}`);
-    console.error(`  Error: ${err.stack || err}`);
+    console.error(`  Error name: ${err.name}`);
+    console.error(`  Error message: ${err.message}`);
+    console.error(`  Error code: ${err.code || 'NO_CODE'}`);
+    console.error(`  Error cause: ${err.cause || 'NO_CAUSE'}`);
+    console.error(`  Full error: ${err.stack || err}`);
     return { ok: false, error: err };
   }
 }
 
 async function main() {
+  console.log(`[DEBUG] === Claude Code Router Test Script Debug Mode ===`);
+  console.log(`[DEBUG] Node.js version: ${process.version}`);
+  console.log(`[DEBUG] Platform: ${process.platform}`);
+  console.log(`[DEBUG] Architecture: ${process.arch}`);
+  
   const config = loadConfig();
+  
+  console.log(`[DEBUG] Environment variables before processing:`);
+  console.log(`[DEBUG] process.env.PROXY_URL = ${process.env.PROXY_URL || 'NOT_SET'}`);
+  console.log(`[DEBUG] process.env.HTTPS_PROXY = ${process.env.HTTPS_PROXY || 'NOT_SET'}`);
+  console.log(`[DEBUG] process.env.HTTP_PROXY = ${process.env.HTTP_PROXY || 'NOT_SET'}`);
   
   // 自动设置代理环境变量
   if (config.PROXY_URL && !process.env.PROXY_URL) {
@@ -102,32 +140,59 @@ async function main() {
     console.log(`[INFO] Set PROXY_URL from config: ${config.PROXY_URL}`);
   }
   
+  console.log(`[DEBUG] Environment variables after processing:`);
+  console.log(`[DEBUG] process.env.PROXY_URL = ${process.env.PROXY_URL || 'NOT_SET'}`);
+  
   const providers: Provider[] = config.Providers || config.providers || [];
+  console.log(`[DEBUG] Found ${providers.length} providers`);
   if (providers.length === 0) {
     console.error('No Providers found in config.json');
     process.exit(1);
   }
+  
   let agent: any = undefined;
   if (process.env.PROXY_URL) {
+    console.log(`[DEBUG] Proxy URL detected: ${process.env.PROXY_URL}`);
     if (process.env.PROXY_URL.startsWith('socks')) {
-      const { SocksProxyAgent } = require('socks-proxy-agent');
-      agent = new SocksProxyAgent(process.env.PROXY_URL);
-      console.log(`[INFO] socks-proxy-agent enabled, proxy: ${process.env.PROXY_URL}`);
+      console.log(`[DEBUG] Creating SocksProxyAgent...`);
+      try {
+        const { SocksProxyAgent } = require('socks-proxy-agent');
+        agent = new SocksProxyAgent(process.env.PROXY_URL);
+        console.log(`[INFO] socks-proxy-agent enabled, proxy: ${process.env.PROXY_URL}`);
+        console.log(`[DEBUG] SocksProxyAgent created successfully`);
+        console.log(`[DEBUG] Agent proxy config: ${agent.proxy || agent.uri || 'UNKNOWN'}`);
+      } catch (socksError) {
+        console.error(`[ERROR] Failed to create SocksProxyAgent: ${socksError.message}`);
+        console.error(`[ERROR] Make sure socks-proxy-agent is installed: npm install socks-proxy-agent`);
+      }
     } else {
-      process.env.GLOBAL_AGENT_HTTP_PROXY = process.env.PROXY_URL;
-      require('global-agent/bootstrap');
-      console.log(`[INFO] global-agent enabled, proxy: ${process.env.PROXY_URL}`);
+      console.log(`[DEBUG] Using global-agent for HTTP proxy...`);
+      try {
+        process.env.GLOBAL_AGENT_HTTP_PROXY = process.env.PROXY_URL;
+        require('global-agent/bootstrap');
+        console.log(`[INFO] global-agent enabled, proxy: ${process.env.PROXY_URL}`);
+      } catch (globalAgentError) {
+        console.error(`[ERROR] Failed to setup global-agent: ${globalAgentError.message}`);
+      }
     }
+  } else {
+    console.log(`[DEBUG] No proxy configured`);
   }
+  
   for (const provider of providers) {
+    console.log(`[DEBUG] Processing provider: ${provider.name}`);
     const apiKeys = getApiKeys(provider);
+    console.log(`[DEBUG] Provider ${provider.name} has ${apiKeys.length} API keys`);
     if (!apiKeys.length) {
       console.warn(`Provider ${provider.name} has no API keys, skipped.`);
       continue;
     }
     for (const model of provider.models) {
+      console.log(`[DEBUG] Testing model: ${model}`);
       for (const apiKey of apiKeys) {
         await testProviderModelKey(provider, model, apiKey, agent);
+        // 添加小延迟避免频率限制
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
   }
