@@ -93,7 +93,17 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
     if (agent) fetchOptions.agent = agent;
     
     console.log(`[DEBUG] Final fetch options: ${JSON.stringify(fetchOptions, null, 2)}`);
-    console.log(`[DEBUG] Making fetch request...`);
+    console.log(`[DEBUG] Making fetch request with node-fetch...`);
+    
+    // 使用 node-fetch 而不是原生 fetch，因为原生 fetch 不支持 agent
+    let fetch;
+    try {
+      fetch = require('node-fetch');
+      console.log(`[DEBUG] Using node-fetch (supports agent parameter)`);
+    } catch (nodeFetchError) {
+      console.error(`[ERROR] node-fetch not available, falling back to global fetch (may not support proxy)`);
+      fetch = globalThis.fetch;
+    }
     
     const res = await fetch(url, fetchOptions);
     const text = await res.text();
