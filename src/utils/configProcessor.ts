@@ -48,7 +48,19 @@ export function processConfig(config: any): ProcessedConfig {
 
   // 自动兼容 llms 代理机制
   if (config.PROXY_URL && !process.env.HTTPS_PROXY && !process.env.https_proxy) {
-    process.env.HTTPS_PROXY = config.PROXY_URL;
+    if (config.PROXY_URL.startsWith('socks')) {
+      console.warn('⚠️  WARNING: Main service does not support socks5 proxy!');
+      console.warn('⚠️  Only test script (ccr test) supports socks5 proxy.');
+      console.warn('⚠️  For main service, please use HTTP proxy or set up HTTP proxy forwarding.');
+      console.warn(`⚠️  Current socks5 proxy: ${config.PROXY_URL}`);
+      console.warn('⚠️  You can:');
+      console.warn('⚠️  1. Use an HTTP proxy instead');
+      console.warn('⚠️  2. Set up HTTP-to-socks5 forwarding (e.g., with Privoxy)');
+      console.warn('⚠️  3. Use a VPN or direct connection for main service');
+    } else {
+      process.env.HTTPS_PROXY = config.PROXY_URL;
+      console.log(`[INFO] Set HTTPS_PROXY for main service: ${config.PROXY_URL}`);
+    }
   }
 
   // 处理providers配置
