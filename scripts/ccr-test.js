@@ -109,6 +109,11 @@ async function main() {
     console.error("No Providers found in config.json");
     import_process.default.exit(1);
   }
+  if (import_process.default.env.PROXY_URL) {
+    import_process.default.env.HTTP_PROXY = import_process.default.env.PROXY_URL;
+    import_process.default.env.HTTPS_PROXY = import_process.default.env.PROXY_URL;
+    console.log(`[INFO] Using proxy: ${import_process.default.env.PROXY_URL}`);
+  }
   for (const provider of providers) {
     const apiKeys = getApiKeys(provider);
     if (!apiKeys.length) {
