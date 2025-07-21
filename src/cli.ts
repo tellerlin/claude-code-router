@@ -22,6 +22,7 @@ Commands:
   rotation      Show API key rotation status
   code          Execute code command
   test          Test all models and API keys in config.json
+  setup         Initialize configuration (calls scripts/setup-config.js)
   -v, version   Show version information
   -h, help      Show help information
 
@@ -130,6 +131,16 @@ async function main() {
         child.on('exit', (code: number) => process.exit(code));
       } catch (e) {
         console.error('Failed to run test script:', e);
+        process.exit(1);
+      }
+      break;
+    case "setup":
+      // 调用 scripts/setup-config.js 的 setupConfig 函数
+      try {
+        const setupConfig = require('../scripts/setup-config.js');
+        setupConfig().then(() => process.exit(0)).catch((e: any) => { console.error(e); process.exit(1); });
+      } catch (e) {
+        console.error('Failed to run setup script:', e);
         process.exit(1);
       }
       break;

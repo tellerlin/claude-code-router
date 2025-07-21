@@ -9,7 +9,6 @@ import { log } from './log';
 export interface ProviderConfig {
   name: string;
   api_base_url: string;
-  api_key?: string; // 向后兼容，单个API Key
   api_keys?: string[] | Array<{
     key: string;
     weight?: number;
@@ -71,20 +70,15 @@ function processProviderConfig(provider: any): ProviderConfig {
     transformer: provider.transformer
   };
 
-  // 处理API Key配置
+  // 只支持轮询配置
   if (provider.api_keys) {
-    // 新的多API Key配置
     processedProvider.api_keys = provider.api_keys;
     processedProvider.enable_rotation = provider.enable_rotation !== false; // 默认启用
     processedProvider.rotation_strategy = provider.rotation_strategy || 'round_robin';
     processedProvider.retry_on_failure = provider.retry_on_failure !== false; // 默认启用
     processedProvider.max_retries = provider.max_retries || 3;
-  } else if (provider.api_key) {
-    // 向后兼容，单个API Key
-    processedProvider.api_key = provider.api_key;
-    processedProvider.enable_rotation = false;
   } else {
-    throw new Error(`Provider ${provider.name} must have either 'api_key' or 'api_keys' configured`);
+    throw new Error(`Provider ${provider.name} must have 'api_keys' configured`);
   }
 
   return processedProvider;
@@ -138,9 +132,9 @@ export function validateConfig(config: any): string[] {
       errors.push(`Provider ${provider.name || 'unknown'} missing required field: models`);
     }
 
-    // 检查API Key配置
-    if (!provider.api_key && !provider.api_keys) {
-      errors.push(`Provider ${provider.name || 'unknown'} must have either 'api_key' or 'api_keys' configured`);
+    // 只允许 api_keys
+    if (!provider.api_keys) {
+      errors.push(`Provider ${provider.name || 'unknown'} must have 'api_keys' configured`);
     }
 
     // 检查API Key轮询配置
@@ -178,11 +172,6 @@ export function getApiKey(providerName: string, provider: ProviderConfig): strin
     if (firstKey) {
       return firstKey;
     }
-  }
-
-  // 回退到单个API Key
-  if (provider.api_key) {
-    return provider.api_key;
   }
 
   throw new Error(`No API key available for provider: ${providerName}`);

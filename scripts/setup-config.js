@@ -115,4 +115,4 @@ async function setupConfig() {
   }
 }
 
-setupConfig(); 
+module.exports = setupConfig; 
