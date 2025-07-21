@@ -1,6 +1,7 @@
 #!/usr/bin/env ts-node
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 import process from 'process';
 
 const CONFIG_PATH = path.join(require('os').homedir(), '.claude-code-router', 'config.json');
@@ -64,7 +65,7 @@ function getTestEndpoint(provider: Provider, model: string): { url: string; meth
   }
 }
 
-async function testProviderModelKey(provider: Provider, model: string, apiKey: string, agent: any) {
+async function testProviderModelKey(provider: Provider, model: string, apiKey: string) {
   const { url, method, body, headers } = getTestEndpoint(provider, model);
   // 自动适配主流API的鉴权方式
   if (provider.api_base_url.includes('openai') || provider.api_base_url.includes('deepseek') || provider.api_base_url.includes('openrouter')) {
@@ -80,8 +81,8 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
   console.log(`[DEBUG] Request method: ${method}`);
   console.log(`[DEBUG] Request headers: ${JSON.stringify(headers)}`);
   console.log(`[DEBUG] Request body: ${body || 'NO_BODY'}`);
-  console.log(`[DEBUG] Proxy method: ${process.env.GLOBAL_AGENT_HTTP_PROXY ? 'global-agent' : 'direct'}`);
-  console.log(`[DEBUG] Proxy URL: ${process.env.GLOBAL_AGENT_HTTP_PROXY || 'NONE'}`);
+  console.log(`[DEBUG] Proxy method: ${process.env.PROXY_URL ? 'undici-ProxyAgent' : 'direct'}`);
+  console.log(`[DEBUG] Proxy URL: ${process.env.PROXY_URL || 'NONE'}`);
   
   const start = Date.now();
   try {
@@ -89,9 +90,9 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
     if (body) fetchOptions.body = body;
     
     console.log(`[DEBUG] Final fetch options: ${JSON.stringify(fetchOptions, null, 2)}`);
-    console.log(`[DEBUG] Making fetch request with global-agent proxy support...`);
+    console.log(`[DEBUG] Making fetch request with undici proxy support...`);
     
-    // 使用原生 fetch，global-agent 会自动拦截代理
+    // 使用原生 fetch，undici ProxyAgent 会自动拦截代理
     const res = await fetch(url, fetchOptions);
     const text = await res.text();
     let json: any = null;
@@ -118,36 +119,44 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
   }
 }
 
+// 动态导入，以避免bundler问题
+let setGlobalDispatcher: any = null;
+let ProxyAgent: any = null;
+
+async function initializeProxySupport() {
+  try {
+    // 尝试导入 undici，Node.js 18+ 原生支持
+    const undici = await import('undici');
+    setGlobalDispatcher = undici.setGlobalDispatcher;
+    ProxyAgent = undici.ProxyAgent;
+    console.log(`[DEBUG] undici imported successfully for proxy support`);
+    return true;
+  } catch (undiciError) {
+    console.log(`[DEBUG] undici not available: ${undiciError.message}`);
+    return false;
+  }
+}
+
 async function main() {
-  console.log(`[DEBUG] === Claude Code Router Test Script Debug Mode ===`);
-  console.log(`[DEBUG] Node.js version: ${process.version}`);
-  console.log(`[DEBUG] Platform: ${process.platform}`);
-  console.log(`[DEBUG] Architecture: ${process.arch}`);
-  
   const config = loadConfig();
-  
-  console.log(`[DEBUG] Environment variables before processing:`);
-  console.log(`[DEBUG] process.env.PROXY_URL = ${process.env.PROXY_URL || 'NOT_SET'}`);
-  console.log(`[DEBUG] process.env.HTTPS_PROXY = ${process.env.HTTPS_PROXY || 'NOT_SET'}`);
-  console.log(`[DEBUG] process.env.HTTP_PROXY = ${process.env.HTTP_PROXY || 'NOT_SET'}`);
   
   // 自动设置代理环境变量
   if (config.PROXY_URL && !process.env.PROXY_URL) {
     process.env.PROXY_URL = config.PROXY_URL;
     console.log(`[INFO] Set PROXY_URL from config: ${config.PROXY_URL}`);
   }
-  
+
+  console.log(`[DEBUG] === Claude Code Router Test Script Debug Mode ===`);
+  console.log(`[DEBUG] Node.js version: ${process.version}`);
+  console.log(`[DEBUG] Platform: ${process.platform}`);
+  console.log(`[DEBUG] Architecture: ${process.arch}`);
+
   console.log(`[DEBUG] Environment variables after processing:`);
   console.log(`[DEBUG] process.env.PROXY_URL = ${process.env.PROXY_URL || 'NOT_SET'}`);
-  
-  const providers: Provider[] = config.Providers || config.providers || [];
-  console.log(`[DEBUG] Found ${providers.length} providers`);
-  if (providers.length === 0) {
-    console.error('No Providers found in config.json');
-    process.exit(1);
-  }
-  
-  let agent: any = undefined;
+
+  console.log(`[DEBUG] Found ${config.Providers?.length || 0} providers`);
+
+  // 设置代理
   if (process.env.PROXY_URL) {
     console.log(`[DEBUG] Proxy URL detected: ${process.env.PROXY_URL}`);
     if (process.env.PROXY_URL.startsWith('socks')) {
@@ -157,15 +166,22 @@ async function main() {
       console.error(`[ERROR] Or remove PROXY_URL to test without proxy`);
       process.exit(1);
     } else {
-      console.log(`[DEBUG] Using HTTP proxy with global-agent...`);
-      try {
-        process.env.GLOBAL_AGENT_HTTP_PROXY = process.env.PROXY_URL;
-        process.env.GLOBAL_AGENT_HTTPS_PROXY = process.env.PROXY_URL;
-        require('global-agent/bootstrap');
-        console.log(`[INFO] global-agent enabled, proxy: ${process.env.PROXY_URL}`);
-        console.log(`[DEBUG] HTTP proxy setup completed`);
-      } catch (globalAgentError) {
-        console.error(`[ERROR] Failed to setup global-agent: ${globalAgentError.message}`);
+      console.log(`[DEBUG] Using HTTP proxy with undici ProxyAgent...`);
+      
+      const proxyInitialized = await initializeProxySupport();
+      if (proxyInitialized && setGlobalDispatcher && ProxyAgent) {
+        try {
+          const proxyAgent = new ProxyAgent(process.env.PROXY_URL);
+          setGlobalDispatcher(proxyAgent);
+          console.log(`[INFO] undici ProxyAgent enabled, proxy: ${process.env.PROXY_URL}`);
+          console.log(`[DEBUG] HTTP proxy setup completed with undici`);
+        } catch (proxyError) {
+          console.error(`[ERROR] Failed to setup undici ProxyAgent: ${proxyError.message}`);
+          process.exit(1);
+        }
+      } else {
+        console.error(`[ERROR] undici ProxyAgent not available, cannot setup proxy`);
+        console.error(`[ERROR] Node.js version: ${process.version}`);
         process.exit(1);
       }
     }
@@ -173,7 +189,7 @@ async function main() {
     console.log(`[DEBUG] No proxy configured`);
   }
   
-  for (const provider of providers) {
+  for (const provider of config.Providers || config.providers || []) {
     console.log(`[DEBUG] Processing provider: ${provider.name}`);
     const apiKeys = getApiKeys(provider);
     console.log(`[DEBUG] Provider ${provider.name} has ${apiKeys.length} API keys`);
@@ -184,9 +200,8 @@ async function main() {
     for (const model of provider.models) {
       console.log(`[DEBUG] Testing model: ${model}`);
       for (const apiKey of apiKeys) {
-        await testProviderModelKey(provider, model, apiKey, agent);
-        // 添加小延迟避免频率限制
-        await new Promise(resolve => setTimeout(resolve, 100));
+        const result = await testProviderModelKey(provider, model, apiKey);
+        if (result.ok) break; // 如果这个 API Key 成功了，就不用测试其他的了
       }
     }
   }
