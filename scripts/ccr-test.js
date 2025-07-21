@@ -27,7 +27,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var import_fs = __toESM(require("fs"));
 var import_path = __toESM(require("path"));
 var import_process = __toESM(require("process"));
-var CONFIG_PATH = import_path.default.resolve(import_process.default.cwd(), "config.json");
+var CONFIG_PATH = import_path.default.join(require("os").homedir(), ".claude-code-router", "config.json");
 function loadConfig() {
   if (!import_fs.default.existsSync(CONFIG_PATH)) {
     console.error(`Config file not found: ${CONFIG_PATH}`);
