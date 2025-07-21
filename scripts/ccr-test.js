@@ -9765,7 +9765,7 @@ var require_bindHttpMethod = __commonJS({
     function _interopRequireDefault(obj) {
       return obj && obj.__esModule ? obj : { default: obj };
     }
-    var bindHttpMethod = (originalMethod, agent2, forceGlobalAgent) => {
+    var bindHttpMethod = (originalMethod, agent, forceGlobalAgent) => {
       return (...args) => {
         let url;
         let options;
@@ -9788,13 +9788,13 @@ var require_bindHttpMethod = __commonJS({
           callback = args[1];
         }
         if (forceGlobalAgent) {
-          options.agent = agent2;
+          options.agent = agent;
         } else {
           if (!options.agent) {
-            options.agent = agent2;
+            options.agent = agent;
           }
           if (options.agent === _http.default.globalAgent || options.agent === _https.default.globalAgent) {
-            options.agent = agent2;
+            options.agent = agent;
           }
         }
         if (url) {
@@ -10311,7 +10311,7 @@ function getTestEndpoint(provider, model) {
     };
   }
 }
-async function testProviderModelKey(provider, model, apiKey) {
+async function testProviderModelKey(provider, model, apiKey, agent) {
   const { url, method, body, headers } = getTestEndpoint(provider, model);
   if (provider.api_base_url.includes("openai") || provider.api_base_url.includes("deepseek") || provider.api_base_url.includes("openrouter")) {
     headers["Authorization"] = `Bearer ${apiKey}`;
@@ -10353,11 +10353,11 @@ async function main() {
     console.error("No Providers found in config.json");
     import_process.default.exit(1);
   }
-  let agent2 = void 0;
+  let agent = void 0;
   if (import_process.default.env.PROXY_URL) {
     if (import_process.default.env.PROXY_URL.startsWith("socks")) {
       const { SocksProxyAgent } = require_dist2();
-      agent2 = new SocksProxyAgent(import_process.default.env.PROXY_URL);
+      agent = new SocksProxyAgent(import_process.default.env.PROXY_URL);
       console.log(`[INFO] socks-proxy-agent enabled, proxy: ${import_process.default.env.PROXY_URL}`);
     } else {
       import_process.default.env.GLOBAL_AGENT_HTTP_PROXY = import_process.default.env.PROXY_URL;
@@ -10373,7 +10373,7 @@ async function main() {
     }
     for (const model of provider.models) {
       for (const apiKey of apiKeys) {
-        await testProviderModelKey(provider, model, apiKey);
+        await testProviderModelKey(provider, model, apiKey, agent);
       }
     }
   }
