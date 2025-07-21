@@ -16839,7 +16839,8 @@ async function testProviderModelKey(provider, model, apiKey, agent) {
     console.log(`[DEBUG] Making fetch request with node-fetch...`);
     let fetch2;
     try {
-      fetch2 = (init_src(), __toCommonJS(src_exports));
+      const nodeFetch = (init_src(), __toCommonJS(src_exports));
+      fetch2 = nodeFetch.default || nodeFetch;
       console.log(`[DEBUG] Using node-fetch (supports agent parameter)`);
     } catch (nodeFetchError) {
       console.error(`[ERROR] node-fetch not available, falling back to global fetch (may not support proxy)`);

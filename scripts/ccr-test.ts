@@ -98,7 +98,9 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
     // 使用 node-fetch 而不是原生 fetch，因为原生 fetch 不支持 agent
     let fetch;
     try {
-      fetch = require('node-fetch');
+      const nodeFetch = require('node-fetch');
+      // 处理 ES6 default export 和 CommonJS 的兼容性
+      fetch = nodeFetch.default || nodeFetch;
       console.log(`[DEBUG] Using node-fetch (supports agent parameter)`);
     } catch (nodeFetchError) {
       console.error(`[ERROR] node-fetch not available, falling back to global fetch (may not support proxy)`);
