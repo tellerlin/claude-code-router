@@ -1,3 +1,4 @@
+declare var process: any;
 /**
  * 配置处理器
  * 用于处理API Key轮询配置并初始化轮询系统
@@ -44,6 +45,11 @@ export function processConfig(config: any): ProcessedConfig {
       HOST: config.HOST
     }
   };
+
+  // 自动兼容 llms 代理机制
+  if (config.PROXY_URL && !process.env.HTTPS_PROXY && !process.env.https_proxy) {
+    process.env.HTTPS_PROXY = config.PROXY_URL;
+  }
 
   // 处理providers配置
   const providers = config.Providers || config.providers || [];
