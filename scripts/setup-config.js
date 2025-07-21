@@ -98,7 +98,15 @@ async function setupConfig() {
   }
 
   try {
-    fs.copyFileSync(templatePath, CONFIG_FILE);
+    const defaultConfig = {
+      PROXY_URL: "socks5h://127.0.0.1:7891", // 默认使用 socks5h
+      LOG: true,
+      HOST: "0.0.0.0",
+      Providers: [
+        // ... existing code ...
+      ]
+    };
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaultConfig, null, 2));
     console.log(`${msg.configCreated} ${CONFIG_FILE}`);
     console.log(`\n${msg.nextSteps}`);
     console.log(`${msg.step1}`);
