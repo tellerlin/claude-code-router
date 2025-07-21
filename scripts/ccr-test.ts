@@ -95,6 +95,13 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
 
 async function main() {
   const config = loadConfig();
+  
+  // 自动设置代理环境变量
+  if (config.PROXY_URL && !process.env.PROXY_URL) {
+    process.env.PROXY_URL = config.PROXY_URL;
+    console.log(`[INFO] Set PROXY_URL from config: ${config.PROXY_URL}`);
+  }
+  
   const providers: Provider[] = config.Providers || config.providers || [];
   if (providers.length === 0) {
     console.error('No Providers found in config.json');

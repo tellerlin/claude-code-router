@@ -10348,6 +10348,10 @@ async function testProviderModelKey(provider, model, apiKey, agent) {
 }
 async function main() {
   const config = loadConfig();
+  if (config.PROXY_URL && !import_process.default.env.PROXY_URL) {
+    import_process.default.env.PROXY_URL = config.PROXY_URL;
+    console.log(`[INFO] Set PROXY_URL from config: ${config.PROXY_URL}`);
+  }
   const providers = config.Providers || config.providers || [];
   if (providers.length === 0) {
     console.error("No Providers found in config.json");
