@@ -60,7 +60,7 @@ npm install -g @tellerlin/claude-code-router
 #### Step 1: Quick Setup (Recommended)
 ```bash
 # Use the automatic setup command
-ccr-setup
+ccr setup
 ```
 
 This will automatically create the configuration directory and copy the template file.
@@ -75,23 +75,8 @@ mkdir -p ~/.claude-code-router
 ```
 
 **Copy Configuration Template**
-Choose one of the following options:
-
-**Option A: Basic Configuration (Single API Key)**
-```bash
-# Copy the basic configuration template from the installed package
-cp $(npm root -g)/@tellerlin/claude-code-router/config.example.json ~/.claude-code-router/config.json
-```
-
-**Option B: API Key Rotation Configuration (Multiple API Keys)**
 ```bash
 # Copy the rotation configuration template from the installed package
-cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
-```
-
-**Option C: Annotated Configuration Template (Recommended for beginners)**
-```bash
-# Copy the annotated configuration template with detailed comments
 cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
@@ -103,7 +88,7 @@ This template has all providers commented out by default, with only Gemini enabl
 npm root -g
 
 # Then copy from the specific path (replace with your actual npm global path)
-cp /usr/local/lib/node_modules/@tellerlin/claude-code-router/config.example.json ~/.claude-code-router/config.json
+cp /usr/local/lib/node_modules/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
 #### Step 3: Edit Configuration File
@@ -119,7 +104,7 @@ code ~/.claude-code-router/config.json
 #### Step 4: Configure Your Settings
 Replace the placeholder values in the configuration file:
 
-1. **Replace API Keys**: Replace `"sk-xxx"` with your actual API keys
+1. **Replace API Keys**: Replace `"sk-xxx"` with your actual API keys (must be in the `api_keys` array, even if only one key)
 2. **Update Provider URLs**: Ensure the `api_base_url` points to your desired provider
 3. **Set Your Secret Key**: Replace `"your-secret-key"` with a secure key for authentication
 4. **Configure Proxy** (optional): Set `PROXY_URL` if you need to use a proxy
@@ -133,9 +118,8 @@ Replace the placeholder values in the configuration file:
 - **Path**: `~/.claude-code-router/config.json`
 - **Global Configuration**: This configuration file is global and applies to all projects on your system
 - **Security Note**: The configuration file contains sensitive API keys and should never be committed to version control
-- **Example files** (available in the installed package): 
-  - `config.example.json` - Basic configuration example (Gemini 2.5-pro only)
-  - `config.example.with-rotation.json` - Configuration template with API key rotation support (recommended, Gemini 2.5-pro only)
+- **Example file** (available in the installed package): 
+  - `config.example.with-rotation.json` - Configuration template with API key rotation support (recommended)
 - **Package location**: Use `npm root -g` to find where the package is installed
 
 #### Basic Configuration Example
@@ -149,7 +133,7 @@ Replace the placeholder values in the configuration file:
     {
       "name": "deepseek",
       "api_base_url": "https://api.deepseek.com/chat/completions",
-      "api_key": "sk-xxx",
+      "api_keys": ["sk-xxx"],
       "models": ["deepseek-chat", "deepseek-reasoner"],
       "transformer": {
         "use": ["deepseek"],
@@ -159,7 +143,7 @@ Replace the placeholder values in the configuration file:
     {
       "name": "openrouter",
       "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-      "api_key": "sk-xxx",
+      "api_keys": ["sk-xxx"],
       "models": [
         "google/gemini-2.5-pro-preview",
         "anthropic/claude-3.5-sonnet"
@@ -179,7 +163,7 @@ Replace the placeholder values in the configuration file:
 
 > **Note:**
 > - The `APIKEY` field is **optional**. Only add it if you want to enable global API authentication for all requests. If not needed, simply remove or ignore this field.
-> - By default, the setup script and templates do **not** include a global APIKEY.
+> - All providers **must** use `api_keys` (array). If you only have one key, put it in the array.
 
 ### 3. Running
 
@@ -461,8 +445,7 @@ Each provider needs to configure the following fields:
 
 - **`name`**: Unique provider name
 - **`api_base_url`**: API endpoint address
-- **`api_key`**: API key (single key mode)
-- **`api_keys`**: API keys (rotation mode)
+- **`api_keys`**: API keys (rotation mode, array, required even for a single key)
 - **`models`**: Available model list
 - **`transformer`** (optional): Request/response transformer
 

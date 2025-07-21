@@ -58,13 +58,13 @@ npm install -g @tellerlin/claude-code-router
 #### 步骤 1: 快速设置（推荐）
 ```bash
 # 使用自动设置命令
-ccr-setup
+ccr setup
 ```
 
 这将自动创建配置目录并复制模板文件。
 
 #### 步骤 2: 手动设置（替代方案）
-如果您喜欢手动设置：
+如果你喜欢手动设置：
 
 **创建配置目录**
 ```bash
@@ -73,74 +73,57 @@ mkdir -p ~/.claude-code-router
 ```
 
 **复制配置模板**
-选择以下选项之一：
-
-**选项 A: 基本配置（单个 API Key）**
 ```bash
-# 从安装的包中复制基本配置模板
-cp $(npm root -g)/@tellerlin/claude-code-router/config.example.json ~/.claude-code-router/config.json
-```
-
-**选项 B: API Key 轮询配置（多个 API Key）**
-```bash
-# 从安装的包中复制轮询配置模板
+# 从已安装包中复制轮询配置模板
 cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
-**选项 C: 带注释的配置模板（推荐给初学者）**
-```bash
-# 复制带详细注释的配置模板
-cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
-```
+该模板默认只启用 Gemini 作为示例。要启用其他 provider，只需去掉对应配置块的注释。
 
-此模板默认注释掉了所有提供商，仅启用Gemini作为示例。要启用某个提供商，只需删除该提供商配置块中每行开头的 `//` 注释即可。
-
-**替代方法（如果上面的方法不工作）：**
+**替代方法（如上述方法无效）：**
 ```bash
-# 查找包的位置
+# 查找包位置
 npm root -g
 
-# 然后从特定路径复制（替换为您的实际npm全局路径）
-cp /usr/local/lib/node_modules/@tellerlin/claude-code-router/config.example.json ~/.claude-code-router/config.json
+# 然后从实际 npm 全局路径复制
+cp /usr/local/lib/node_modules/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
 #### 步骤 3: 编辑配置文件
 ```bash
-# 使用您喜欢的编辑器编辑配置文件
+# 用你喜欢的编辑器编辑配置文件
 nano ~/.claude-code-router/config.json
-# 或使用 vim
+# 或 vim
 vim ~/.claude-code-router/config.json
-# 或使用 VS Code
+# 或 VS Code
 code ~/.claude-code-router/config.json
 ```
 
-#### 步骤 4: 配置您的设置
-替换配置文件中的占位符值：
+#### 步骤 4: 配置你的设置
+替换配置文件中的占位符：
 
-1. **替换 API Keys**: 将 `"sk-xxx"` 替换为您的实际 API keys
-2. **更新提供商 URL**: 确保 `api_base_url` 指向您想要的提供商
-3. **设置您的密钥**: 将 `"your-secret-key"` 替换为用于身份验证的安全密钥
-4. **配置代理**（可选）: 如果需要使用代理，请设置 `PROXY_URL`
+1. **替换 API Keys**：将 `"sk-xxx"` 替换为你的实际 API keys（必须写在 `api_keys` 数组中，即使只有一个 key）
+2. **更新 provider URL**：确保 `api_base_url` 指向你想要的 provider
+3. **设置你的密钥**：将 `"your-secret-key"` 替换为用于身份认证的安全密钥
+4. **配置代理**（可选）：如需代理，设置 `PROXY_URL`
 
 #### 步骤 5: 保存并退出
-- **对于 nano**: 按 `Ctrl+X`，然后按 `Y`，然后按 `Enter`
-- **对于 vim**: 按 `Esc`，输入 `:wq`，然后按 `Enter`
-- **对于 VS Code**: 按 `Ctrl+S` 保存，然后关闭编辑器
+- **nano**：按 `Ctrl+X`，然后 `Y`，再 `Enter`
+- **vim**：按 `Esc`，输入 `:wq`，再 `Enter`
+- **VS Code**：按 `Ctrl+S` 保存，然后关闭编辑器
 
 #### 配置文件位置
-- **路径**: `~/.claude-code-router/config.json`
-- **全局配置**: 此配置文件是全局的，适用于您系统上的所有项目
-- **安全提醒**: 配置文件包含敏感的 API Keys，绝不应该提交到版本控制
-- **示例文件**（在安装的包中可用）: 
-  - `config.example.json` - 基本配置示例（仅Gemini 2.5-pro）
-  - `config.example.with-rotation.json` - 支持API密钥轮询的配置模板（推荐，仅Gemini 2.5-pro）
-- **包位置**: 使用 `npm root -g` 查找包安装位置
+- **路径**：`~/.claude-code-router/config.json`
+- **全局配置**：该配置文件为全局配置，适用于你系统上的所有项目
+- **安全提示**：配置文件包含敏感 API Keys，切勿提交到版本控制
+- **示例文件**（随包提供）：
+  - `config.example.with-rotation.json` - 推荐的 API key 轮询配置模板
+- **包位置**：用 `npm root -g` 查找包安装位置
 
 #### 基本配置示例
 
 ```json
 {
-  // "APIKEY": "your-access-key",  // 可选：访问控制密钥
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",
@@ -148,7 +131,7 @@ code ~/.claude-code-router/config.json
     {
       "name": "deepseek",
       "api_base_url": "https://api.deepseek.com/chat/completions",
-      "api_key": "sk-xxx",
+      "api_keys": ["sk-xxx"],
       "models": ["deepseek-chat", "deepseek-reasoner"],
       "transformer": {
         "use": ["deepseek"],
@@ -158,7 +141,7 @@ code ~/.claude-code-router/config.json
     {
       "name": "openrouter",
       "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-      "api_key": "sk-xxx",
+      "api_keys": ["sk-xxx"],
       "models": [
         "google/gemini-2.5-pro-preview",
         "anthropic/claude-3.5-sonnet"
@@ -171,9 +154,14 @@ code ~/.claude-code-router/config.json
     "background": "ollama,qwen2.5-coder:latest",
     "think": "deepseek,deepseek-reasoner",
     "longContext": "openrouter,google/gemini-2.5-pro-preview"
-  }
+  },
+  "APIKEY_optional": "(可选) 设置此字段以启用全局 API 鉴权。不需要可移除。"
 }
 ```
+
+> **注意：**
+> - `APIKEY` 字段为可选。仅当你需要全局 API 鉴权时添加。
+> - 所有 provider **必须** 使用 `api_keys`（数组）。即使只有一个 key，也要写在数组中。
 
 ### 3. 启动
 
@@ -450,14 +438,13 @@ ccr code "写一个 Hello World 程序"
 
 ### Providers 配置
 
-每个提供商需要配置以下字段：
+每个 provider 需配置以下字段：
 
-- **`name`**: 提供商唯一名称
-- **`api_base_url`**: API 端点地址
-- **`api_key`**: API 密钥（单个密钥模式）
-- **`api_keys`**: API 密钥（轮询模式）
-- **`models`**: 可用模型列表
-- **`transformer`** (可选): 请求/响应转换器
+- **`name`**：唯一 provider 名称
+- **`api_base_url`**：API 端点地址
+- **`api_keys`**：API key 数组（轮询模式，单 key 也必须写在数组中）
+- **`models`**：可用模型列表
+- **`transformer`**（可选）：请求/响应转换器
 
 ### Router 配置
 
