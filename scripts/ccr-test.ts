@@ -71,7 +71,7 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
   }
   const start = Date.now();
   try {
-    const res = await fetch(url, { method, headers, body });
+    const res = await fetch(url, { method, headers, body, agent });
     const text = await res.text();
     let json: any = null;
     try { json = JSON.parse(text); } catch {}
@@ -100,11 +100,17 @@ async function main() {
     console.error('No Providers found in config.json');
     process.exit(1);
   }
-  // 自动全局代理支持（global-agent）
-  if (typeof require !== 'undefined' && process.env.PROXY_URL) {
-    process.env.GLOBAL_AGENT_HTTP_PROXY = process.env.PROXY_URL;
-    require('global-agent/bootstrap');
-    console.log(`[INFO] global-agent enabled, proxy: ${process.env.PROXY_URL}`);
+  let agent: any = undefined;
+  if (process.env.PROXY_URL) {
+    if (process.env.PROXY_URL.startsWith('socks')) {
+      const { SocksProxyAgent } = require('socks-proxy-agent');
+      agent = new SocksProxyAgent(process.env.PROXY_URL);
+      console.log(`[INFO] socks-proxy-agent enabled, proxy: ${process.env.PROXY_URL}`);
+    } else {
+      process.env.GLOBAL_AGENT_HTTP_PROXY = process.env.PROXY_URL;
+      require('global-agent/bootstrap');
+      console.log(`[INFO] global-agent enabled, proxy: ${process.env.PROXY_URL}`);
+    }
   }
   for (const provider of providers) {
     const apiKeys = getApiKeys(provider);
