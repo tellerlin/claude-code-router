@@ -80,33 +80,18 @@ async function testProviderModelKey(provider: Provider, model: string, apiKey: s
   console.log(`[DEBUG] Request method: ${method}`);
   console.log(`[DEBUG] Request headers: ${JSON.stringify(headers)}`);
   console.log(`[DEBUG] Request body: ${body || 'NO_BODY'}`);
-  console.log(`[DEBUG] Agent configured: ${agent ? 'YES' : 'NO'}`);
-  if (agent) {
-    console.log(`[DEBUG] Agent type: ${agent.constructor.name}`);
-    console.log(`[DEBUG] Agent proxy: ${agent.proxy || agent.uri || 'UNKNOWN'}`);
-  }
+  console.log(`[DEBUG] Proxy method: ${process.env.GLOBAL_AGENT_HTTP_PROXY ? 'global-agent' : 'direct'}`);
+  console.log(`[DEBUG] Proxy URL: ${process.env.GLOBAL_AGENT_HTTP_PROXY || 'NONE'}`);
   
   const start = Date.now();
   try {
     const fetchOptions: any = { method, headers };
     if (body) fetchOptions.body = body;
-    if (agent) fetchOptions.agent = agent;
     
     console.log(`[DEBUG] Final fetch options: ${JSON.stringify(fetchOptions, null, 2)}`);
-    console.log(`[DEBUG] Making fetch request with node-fetch...`);
+    console.log(`[DEBUG] Making fetch request with global-agent proxy support...`);
     
-    // 使用 node-fetch 而不是原生 fetch，因为原生 fetch 不支持 agent
-    let fetch;
-    try {
-      const nodeFetch = require('node-fetch');
-      // 处理 ES6 default export 和 CommonJS 的兼容性
-      fetch = nodeFetch.default || nodeFetch;
-      console.log(`[DEBUG] Using node-fetch (supports agent parameter)`);
-    } catch (nodeFetchError) {
-      console.error(`[ERROR] node-fetch not available, falling back to global fetch (may not support proxy)`);
-      fetch = globalThis.fetch;
-    }
-    
+    // 使用原生 fetch，global-agent 会自动拦截代理
     const res = await fetch(url, fetchOptions);
     const text = await res.text();
     let json: any = null;
@@ -166,25 +151,22 @@ async function main() {
   if (process.env.PROXY_URL) {
     console.log(`[DEBUG] Proxy URL detected: ${process.env.PROXY_URL}`);
     if (process.env.PROXY_URL.startsWith('socks')) {
-      console.log(`[DEBUG] Creating SocksProxyAgent...`);
-      try {
-        const { SocksProxyAgent } = require('socks-proxy-agent');
-        agent = new SocksProxyAgent(process.env.PROXY_URL);
-        console.log(`[INFO] socks-proxy-agent enabled, proxy: ${process.env.PROXY_URL}`);
-        console.log(`[DEBUG] SocksProxyAgent created successfully`);
-        console.log(`[DEBUG] Agent proxy config: ${agent.proxy || agent.uri || 'UNKNOWN'}`);
-      } catch (socksError) {
-        console.error(`[ERROR] Failed to create SocksProxyAgent: ${socksError.message}`);
-        console.error(`[ERROR] Make sure socks-proxy-agent is installed: npm install socks-proxy-agent`);
-      }
+      console.error(`[ERROR] socks5 proxy not supported in test script!`);
+      console.error(`[ERROR] Please use HTTP proxy instead of: ${process.env.PROXY_URL}`);
+      console.error(`[ERROR] Example: http://proxy.example.com:8080`);
+      console.error(`[ERROR] Or remove PROXY_URL to test without proxy`);
+      process.exit(1);
     } else {
-      console.log(`[DEBUG] Using global-agent for HTTP proxy...`);
+      console.log(`[DEBUG] Using HTTP proxy with global-agent...`);
       try {
         process.env.GLOBAL_AGENT_HTTP_PROXY = process.env.PROXY_URL;
+        process.env.GLOBAL_AGENT_HTTPS_PROXY = process.env.PROXY_URL;
         require('global-agent/bootstrap');
         console.log(`[INFO] global-agent enabled, proxy: ${process.env.PROXY_URL}`);
+        console.log(`[DEBUG] HTTP proxy setup completed`);
       } catch (globalAgentError) {
         console.error(`[ERROR] Failed to setup global-agent: ${globalAgentError.message}`);
+        process.exit(1);
       }
     }
   } else {
