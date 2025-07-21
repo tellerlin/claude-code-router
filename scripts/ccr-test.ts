@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 
-const CONFIG_PATH = path.resolve(process.cwd(), 'config.json');
+const CONFIG_PATH = path.join(require('os').homedir(), '.claude-code-router', 'config.json');
 
 interface Provider {
   name: string;

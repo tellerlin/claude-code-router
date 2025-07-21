@@ -7,7 +7,7 @@
     "ccr-setup": "scripts/setup-config.js"
   },
   "scripts": {
-    "build": "esbuild src/cli.ts --bundle --platform=node --outfile=dist/cli.js && esbuild scripts/ccr-test.ts --bundle --platform=node --outfile=scripts/ccr-test.js && shx cp node_modules/tiktoken/tiktoken_bg.wasm dist/tiktoken_bg.wasm"
+    "build": "esbuild src/cli.ts --bundle --platform=node --outfile=dist/cli.js --external:./package.json && esbuild scripts/ccr-test.ts --bundle --platform=node --outfile=scripts/ccr-test.js --external:./package.json && shx cp node_modules/tiktoken/tiktoken_bg.wasm dist/tiktoken_bg.wasm"
   },
   "keywords": [
     "claude",
