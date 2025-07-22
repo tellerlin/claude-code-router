@@ -1,6 +1,9 @@
+// @ts-ignore
 import Server from "@musistudio/llms";
 
-export const createServer = (config: any): Server => {
+declare var process: any;
+
+export const createServer = (config: any): any => {
   // 检查是否需要 socks5 代理支持
   const proxyUrl = config.initialConfig?.PROXY_URL || process.env.PROXY_URL;
   

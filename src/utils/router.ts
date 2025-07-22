@@ -9,21 +9,21 @@ const getUseModel = (req: any, tokenCount: number, config: any) => {
     return req.body.model;
   }
   // if tokenCount is greater than 60K, use the long context model
-  if (tokenCount > 1000 * 60 && config.Router.longContext) {
+  if (tokenCount > 1000 * 60 && config.router.longContext) {
     log("Using long context model due to token count:", tokenCount);
-    return config.Router.longContext;
+    return config.router.longContext;
   }
   // If the model is claude-3-5-haiku, use the background model
-  if (req.body.model?.startsWith("claude-3-5-haiku") && config.Router.background) {
+  if (req.body.model?.startsWith("claude-3-5-haiku") && config.router.background) {
     log("Using background model for ", req.body.model);
-    return config.Router.background;
+    return config.router.background;
   }
   // if exits thinking, use the think model
-  if (req.body.thinking && config.Router.think) {
+  if (req.body.thinking && config.router.think) {
     log("Using think model for ", req.body.thinking);
-    return config.Router.think;
+    return config.router.think;
   }
-  return config.Router!.default;
+  return config.router.default;
 };
 
 export const router = async (req: any, res: any, config: any) => {
@@ -35,42 +35,34 @@ export const router = async (req: any, res: any, config: any) => {
         if (typeof message.content === "string") {
           tokenCount += enc.encode(message.content).length;
         } else if (Array.isArray(message.content)) {
-          message.content.forEach((contentPart) => {
-            if (contentPart.type === "text") {
-              tokenCount += enc.encode(contentPart.text).length;
-            } else if (contentPart.type === "tool_use") {
-              tokenCount += enc.encode(
-                JSON.stringify(contentPart.input)
-              ).length;
-            } else if (contentPart.type === "tool_result") {
-              tokenCount += enc.encode(
-                typeof contentPart.content === "string"
-                  ? contentPart.content
-                  : JSON.stringify(contentPart.content)
-              ).length;
+          message.content.forEach((content) => {
+            if (content.type === "text") {
+              tokenCount += enc.encode(content.text).length;
             }
           });
         }
       });
     }
-    if (typeof system === "string") {
-      tokenCount += enc.encode(system).length;
-    } else if (Array.isArray(system)) {
-      system.forEach((item) => {
-        if (item.type !== "text") return;
-        if (typeof item.text === "string") {
-          tokenCount += enc.encode(item.text).length;
-        } else if (Array.isArray(item.text)) {
-          item.text.forEach((textPart) => {
-            tokenCount += enc.encode(textPart || "").length;
-          });
+
+    if (Array.isArray(system)) {
+      system.forEach((sys) => {
+        if (typeof sys === "string") {
+          tokenCount += enc.encode(sys).length;
+        } else if (sys.text) {
+          tokenCount += enc.encode(sys.text).length;
         }
       });
+    } else if (typeof system === "string") {
+      tokenCount += enc.encode(system).length;
     }
-    if (tools) {
+
+    if (Array.isArray(tools)) {
       tools.forEach((tool) => {
+        if (tool.name) {
+          tokenCount += enc.encode(tool.name).length;
+        }
         if (tool.description) {
-          tokenCount += enc.encode(tool.name + tool.description).length;
+          tokenCount += enc.encode(tool.description).length;
         }
         if (tool.input_schema) {
           tokenCount += enc.encode(JSON.stringify(tool.input_schema)).length;
@@ -81,7 +73,7 @@ export const router = async (req: any, res: any, config: any) => {
     req.body.model = model;
   } catch (error: any) {
     log("Error in router middleware:", error.message);
-    req.body.model = config.Router!.default;
+    req.body.model = config.router.default;
   }
   return;
 };
