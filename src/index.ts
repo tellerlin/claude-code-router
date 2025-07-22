@@ -1,6 +1,10 @@
+// @ts-ignore
 import { existsSync } from "fs";
+// @ts-ignore
 import { writeFile } from "fs/promises";
+// @ts-ignore
 import { homedir } from "os";
+// @ts-ignore
 import { join } from "path";
 import { initConfig, initDir } from "./utils";
 import { createServer } from "./server";
@@ -12,6 +16,9 @@ import {
   savePid,
 } from "./utils/processCheck";
 import { CONFIG_FILE } from "./constants";
+
+// 声明全局变量
+declare var process: any;
 
 async function initializeClaudeConfig() {
   const homeDir = homedir();
@@ -84,7 +91,7 @@ async function run(options: RunOptions = {}) {
   const server = createServer({
     jsonPath: CONFIG_FILE,
     initialConfig: {
-      providers: processedConfig.providers.map(p => ({
+      providers: processedConfig.providers.map((p: any) => ({
         name: p.name,
         api_base_url: p.api_base_url,
         api_key: Array.isArray(p.api_keys) && p.api_keys.length > 0 ? p.api_keys[0] : '',
@@ -101,13 +108,16 @@ async function run(options: RunOptions = {}) {
     },
   });
   server.addHook("preHandler", apiKeyAuth(processedConfig.global));
-  server.addHook("preHandler", async (req, reply) =>
+  server.addHook("preHandler", async (req: any, reply: any) =>
     router(req, reply, processedConfig)
   );
   
   try {
     await server.start();
     console.log(`🚀 Claude Code Router service started successfully on ${HOST}:${servicePort}`);
+    
+    // 服务启动成功后，退出主进程，让服务在后台运行
+    process.exit(0);
   } catch (error) {
     console.error("Failed to start service:", error);
     cleanupPidFile();

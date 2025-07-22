@@ -52,6 +52,37 @@ async function waitForService(
   return false;
 }
 
+async function startServiceInBackground(): Promise<boolean> {
+  // Check if service is already running
+  if (isServiceRunning()) {
+    console.log("✅ Service is already running in the background.");
+    return true;
+  }
+
+  const cliPath = join(__dirname, "cli.js");
+  const startProcess = spawn("node", [cliPath, "_internal_start"], {
+    detached: true,
+    stdio: "ignore",
+  });
+
+  startProcess.on("error", (error) => {
+    console.error("Failed to start service:", error);
+    return false;
+  });
+
+  startProcess.unref();
+
+  console.log("🚀 Starting Claude Code Router service...");
+  
+  if (await waitForService()) {
+    console.log("✅ Service started successfully and running in background.");
+    return true;
+  } else {
+    console.error("❌ Service startup timeout. Check logs for details.");
+    return false;
+  }
+}
+
 async function main() {
   // Show version info and update prompt for all commands except help and version
   if (command !== "-h" && command !== "help" && command !== "-v" && command !== "version") {
@@ -63,6 +94,13 @@ async function main() {
   
   switch (command) {
     case "start":
+      const started = await startServiceInBackground();
+      if (!started) {
+        process.exit(1);
+      }
+      break;
+    case "_internal_start":
+      // 内部命令，用于后台启动实际服务
       run();
       break;
     case "stop":
@@ -96,25 +134,11 @@ async function main() {
     case "code":
       if (!isServiceRunning()) {
         console.log("Service not running, starting service...");
-        const cliPath = join(__dirname, "cli.js");
-        const startProcess = spawn("node", [cliPath, "start"], {
-          detached: true,
-          stdio: "ignore",
-        });
-
-        startProcess.on("error", (error) => {
-          console.error("Failed to start service:", error);
-          process.exit(1);
-        });
-
-        startProcess.unref();
-
-        if (await waitForService()) {
+        const started = await startServiceInBackground();
+        if (started) {
           executeCodeCommand(process.argv.slice(3));
         } else {
-          console.error(
-            "Service startup timeout, please manually run `ccr start` to start the service"
-          );
+          console.error("Failed to start service for code command");
           process.exit(1);
         }
       } else {
@@ -122,40 +146,24 @@ async function main() {
       }
       break;
     case "test":
-      // 自动调用 scripts/ccr-test.js，兼容 Windows 路径
-      try {
-        const nodeCmd = process.execPath; // 使用当前 node 解释器
-        const scriptPath = require('path').join(__dirname, '../scripts/ccr-test.js');
-        const { spawn } = require('child_process');
-        const child = spawn(nodeCmd, [scriptPath], { stdio: 'inherit' });
-        child.on('exit', (code: number) => process.exit(code));
-      } catch (e) {
-        console.error('Failed to run test script:', e);
-        process.exit(1);
-      }
+      const { spawn } = require("child_process");
+      const scriptPath = join(__dirname, "../scripts/ccr-test.js");
+      spawn("node", [scriptPath], { stdio: "inherit" });
       break;
     case "setup":
-      // 调用 scripts/setup-config.js 的 setupConfig 函数
-      try {
-        const setupConfig = require('../scripts/setup-config.js');
-        setupConfig().then(() => process.exit(0)).catch((e: any) => { console.error(e); process.exit(1); });
-      } catch (e) {
-        console.error('Failed to run setup script:', e);
-        process.exit(1);
-      }
+      const setupPath = join(__dirname, "../scripts/setup-config.js");
+      spawn("node", [setupPath], { stdio: "inherit" });
       break;
     case "-v":
     case "version":
-      console.log(`claude-code-router version: ${version}`);
+      showVersionInfo();
       break;
     case "-h":
     case "help":
-      console.log(HELP_TEXT);
-      break;
     default:
       console.log(HELP_TEXT);
-      process.exit(1);
+      break;
   }
 }
 
-main().catch(console.error);
+main();
