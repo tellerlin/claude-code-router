@@ -12,7 +12,9 @@
 - **多种轮询策略**: round_robin、random、weighted、least_used
 - **智能错误处理**: 自动重试、失败计数、冷却机制
 - **状态监控**: 实时监控 API Key 轮询状态
-- **向后兼容**: 所有原始功能保持不变
+- **增强 CLI**: 改进的命令行界面，提供详细状态信息
+- **后台服务**: 自动服务管理，正确清理资源
+- **全面测试**: 内置 API Keys 和模型测试功能
 
 ### 🔗 相关链接
 
@@ -35,7 +37,9 @@
 -   **API Key 轮询**: 支持多个 API Key 的自动轮询和负载均衡
 -   **多种轮询策略**: round_robin、random、weighted、least_used
 -   **智能错误处理**: 自动重试、失败计数、冷却机制
--   **状态监控**: 通过 `ccr rotation` 命令实时监控 API Key 轮询状态
+-   **状态监控**: 通过 `ccr status` 和 `ccr rotation` 命令实时监控 API Key 轮询状态
+-   **增强测试**: 通过 `ccr test` 命令对所有模型和 API Keys 进行全面测试
+-   **后台服务管理**: 正确的服务生命周期管理，自动启动和清理
 
 ## 🚀 快速开始
 
@@ -55,20 +59,22 @@ npm install -g @tellerlin/claude-code-router
 
 ### 2. 配置
 
-#### 步骤 1: 快速设置（推荐）
+#### 快速设置（推荐）
 ```bash
 # 使用自动设置命令
 ccr setup
 ```
 
-这将自动创建配置目录并复制模板文件。
+这将自动：
+- 创建配置目录（`~/.claude-code-router/`）
+- 生成模板配置文件
+- 提供设置说明
 
-#### 步骤 2: 手动设置（替代方案）
-如果你喜欢手动设置：
+#### 手动设置（替代方案）
+如果您喜欢手动设置：
 
 **创建配置目录**
 ```bash
-# 创建配置目录
 mkdir -p ~/.claude-code-router
 ```
 
@@ -78,9 +84,7 @@ mkdir -p ~/.claude-code-router
 cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
-该模板默认只启用 Gemini 作为示例。要启用其他 provider，只需去掉对应配置块的注释。
-
-**替代方法（如上述方法无效）：**
+**替代方法：**
 ```bash
 # 查找包位置
 npm root -g
@@ -89,38 +93,17 @@ npm root -g
 cp /usr/local/lib/node_modules/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
-#### 步骤 3: 编辑配置文件
+#### 编辑配置
 ```bash
-# 用你喜欢的编辑器编辑配置文件
+# 用您喜欢的编辑器编辑配置文件
 nano ~/.claude-code-router/config.json
-# 或 vim
+# 或
 vim ~/.claude-code-router/config.json
-# 或 VS Code
+# 或
 code ~/.claude-code-router/config.json
 ```
 
-#### 步骤 4: 配置你的设置
-替换配置文件中的占位符：
-
-1. **替换 API Keys**：将 `"sk-xxx"` 替换为你的实际 API keys（必须写在 `api_keys` 数组中，即使只有一个 key）
-2. **更新 provider URL**：确保 `api_base_url` 指向你想要的 provider
-3. **设置你的密钥**：将 `"your-secret-key"` 替换为用于身份认证的安全密钥
-4. **配置代理**（可选）：如需代理，设置 `PROXY_URL`
-
-#### 步骤 5: 保存并退出
-- **nano**：按 `Ctrl+X`，然后 `Y`，再 `Enter`
-- **vim**：按 `Esc`，输入 `:wq`，再 `Enter`
-- **VS Code**：按 `Ctrl+S` 保存，然后关闭编辑器
-
-#### 配置文件位置
-- **路径**：`~/.claude-code-router/config.json`
-- **全局配置**：该配置文件为全局配置，适用于你系统上的所有项目
-- **安全提示**：配置文件包含敏感 API Keys，切勿提交到版本控制
-- **示例文件**（随包提供）：
-  - `config.example.with-rotation.json` - 推荐的 API key 轮询配置模板
-- **包位置**：用 `npm root -g` 查找包安装位置
-
-#### 基本配置示例
+### 3. 基本配置示例
 
 ```json
 {
@@ -129,118 +112,140 @@ code ~/.claude-code-router/config.json
   "HOST": "0.0.0.0",
   "Providers": [
     {
-      "name": "deepseek",
-      "api_base_url": "https://api.deepseek.com/chat/completions",
-      "api_keys": ["sk-xxx"],
-      "models": ["deepseek-chat", "deepseek-reasoner"],
-      "transformer": {
-        "use": ["deepseek"],
-        "deepseek-chat": { "use": ["tooluse"] }
-      }
-    },
-    {
-      "name": "openrouter",
-      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-      "api_keys": ["sk-xxx"],
-      "models": [
-        "google/gemini-2.5-pro-preview",
-        "anthropic/claude-3.5-sonnet"
+      "name": "gemini",
+      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "api_keys": [
+        "YOUR_GEMINI_API_KEY_1",
+        "YOUR_GEMINI_API_KEY_2",
+        "YOUR_GEMINI_API_KEY_3"
       ],
-      "transformer": { "use": ["openrouter"] }
+      "enable_rotation": true,
+      "rotation_strategy": "round_robin",
+      "retry_on_failure": true,
+      "max_retries": 3,
+      "models": ["gemini-2.5-pro", "gemini-2.5-flash"],
+      "transformer": { "use": ["gemini"] }
     }
   ],
   "Router": {
-    "default": "deepseek,deepseek-chat",
-    "background": "ollama,qwen2.5-coder:latest",
-    "think": "deepseek,deepseek-reasoner",
-    "longContext": "openrouter,google/gemini-2.5-pro-preview"
-  },
-  "APIKEY_optional": "(可选) 设置此字段以启用全局 API 鉴权。不需要可移除。"
+    "default": "gemini,gemini-2.5-pro",
+    "background": "gemini,gemini-2.5-flash",
+    "think": "gemini,gemini-2.5-pro",
+    "longContext": "gemini,gemini-2.5-pro"
+  }
 }
 ```
 
-> **注意：**
-> - `APIKEY` 字段为可选。仅当你需要全局 API 鉴权时添加。
-> - 所有 provider **必须** 使用 `api_keys`（数组）。即使只有一个 key，也要写在数组中。
+> **重要说明：**
+> - 所有 provider **必须** 使用 `api_keys`（数组格式），即使只有一个 key
+> - `APIKEY` 字段是可选的，用于全局身份验证
+> - 代理支持：仅支持 HTTP/HTTPS 代理（主服务不支持 SOCKS5）
 
-### 3. 启动
+## 🎮 使用方法
 
-#### 首次设置
-如果这是您第一次运行该工具，它会引导您完成交互式设置：
-
-```bash
-ccr code
-```
-
-系统将要求您提供：
-- 提供商名称
-- API 密钥
-- 提供商 URL
-- 模型名称
-
-#### 正常使用
-配置完成后，只需运行：
+### 基本命令
 
 ```bash
-ccr code
-```
+# 启动后台服务
+ccr start
 
-#### 一键测试所有 API Key 和模型
-要快速验证所有配置的 API Key 和模型是否可用，可运行：
+# 停止后台服务
+ccr stop
 
-```bash
-ccr test
-```
-
-该命令会自动测试 config.json 中所有 Provider 的 model+apikey 组合，并输出详细日志，便于排查。
-
-#### 验证安装
-检查一切是否正常：
-
-```bash
-# 检查服务状态
+# 查看服务状态和 API Key 轮询信息
 ccr status
 
-# 检查版本
+# 查看详细的 API Key 轮询状态
+ccr rotation
+
+# 执行 Claude Code（如需要会自动启动服务）
+ccr code "写一个 Hello World 程序"
+
+# 测试 config.json 中的所有模型和 API Keys
+ccr test
+
+# 初始化配置
+ccr setup
+
+# 查看版本
 ccr -v
 
-# 获取帮助
+# 查看帮助
 ccr -h
 ```
 
+### 服务管理
+
+Claude Code Router 作为后台服务运行：
+
+- **`ccr start`**: 启动后台服务（运行在端口 3456）
+- **`ccr stop`**: 停止后台服务
+- **`ccr status`**: 查看服务状态，包括 API Key 轮询信息
+- **`ccr code`**: 执行 Claude Code 命令（如需要会自动启动服务）
+
+### 测试和验证
+
+```bash
+# 测试所有配置的 API Keys 和模型
+ccr test
+```
+
+此命令将：
+- 测试配置中的每个 API Key 和模型组合
+- 显示每个 key 的详细状态（成功/失败）
+- 显示响应时间和错误消息
+- 提供可用与失败 keys 的摘要
+
+### 详细状态监控
+
+```bash
+# 查看基本服务状态
+ccr status
+
+# 查看详细的 API Key 轮询状态
+ccr rotation
+```
+
+状态命令显示：
+- 服务运行状态（PID）
+- API Key 轮询配置
+- 各个 key 的状态（活跃/非活跃）
+- 失败计数和最后使用时间
+- 可用与总 keys 数量
+
 ## 🔄 API Key 轮询功能
 
-Claude Code Router 现在支持多个 API Key 轮询功能，可以自动在多个 API Key 之间切换，提高可用性和负载均衡。
+Claude Code Router 支持高级 API Key 轮询，具有多种策略和智能错误处理。
 
-### 配置方式
-
-#### 1. 基本轮询配置
+### 基本轮询配置
 ```json
 {
   "name": "gemini",
   "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
-  "api_keys": ["sk-xxx1", "sk-xxx2", "sk-xxx3"],
+  "api_keys": ["key1", "key2", "key3"],
   "enable_rotation": true,
   "rotation_strategy": "round_robin",
+  "retry_on_failure": true,
+  "max_retries": 3,
   "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
   "transformer": { "use": ["gemini"] }
 }
 ```
 
-#### 2. 高级轮询配置
+### 高级轮询配置
 ```json
 {
   "name": "gemini",
   "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
   "api_keys": [
     {
-      "key": "sk-xxx1",
+      "key": "key1",
       "weight": 2,
       "maxFailures": 5,
       "cooldownTime": 60000
     },
     {
-      "key": "sk-xxx2",
+      "key": "key2",
       "weight": 1,
       "maxFailures": 3,
       "cooldownTime": 30000
@@ -255,10 +260,113 @@ Claude Code Router 现在支持多个 API Key 轮询功能，可以自动在多�
 }
 ```
 
-#### 3. 完整配置（包含路由规则）
+### 轮询策略
+
+- **`round_robin`**（默认）：轮询方式，按顺序使用每个 API Key
+- **`random`**: 随机选择，适合高并发场景
+- **`weighted`**: 加权轮询，支持不同 API Keys 的权重
+- **`least_used`**: 最少使用优先，选择最近最少使用的 Key
+
+### 配置参数
+
+- **`api_keys`**: API Key 列表（字符串数组或对象数组）
+- **`enable_rotation`**: 是否启用轮询（默认：true）
+- **`rotation_strategy`**: 轮询策略（默认：round_robin）
+- **`retry_on_failure`**: 失败时是否重试（默认：true）
+- **`max_retries`**: 最大重试次数（默认：3）
+
+#### API Key 对象配置
+- **`key`**: API Key 字符串
+- **`weight`**: 加权轮询的权重（默认：1）
+- **`maxFailures`**: 禁用 Key 前的最大失败次数
+- **`cooldownTime`**: 失败后的冷却时间（毫秒）
+
+### 状态监控
+
+使用内置命令监控 API Key 轮询：
+
+```bash
+# 基本状态（包含轮询信息）
+ccr status
+
+# 详细轮询状态
+ccr rotation
+```
+
+示例输出：
+```
+🚀 Claude Code Router v1.0.68
+✅ Service is running (PID: 12345)
+
+📊 API Key Rotation Status:
+============================================================
+
+🔧 Provider: gemini
+   Strategy: round_robin
+   Total Keys: 3
+   Available Keys: 3
+   Key Status:
+     ✅ AIzaSyAV... (0 failures)
+     ✅ AIzaSyCf... (0 failures)
+     ✅ AIzaSyCd... (0 failures)
+
+============================================================
+```
+
+## 🔧 配置详解
+
+### 全局配置
+
+- **`APIKEY`**（可选）：全局访问控制密钥。设置后，所有请求必须在 `Authorization` 头（`Bearer your-key`）或 `x-api-key` 头中包含此密钥
+- **`PROXY_URL`**（可选）：HTTP/HTTPS 代理服务器（例如：`"http://127.0.0.1:7890"`）
+- **`LOG`**（可选）：启用日志记录到 `$HOME/.claude-code-router.log`
+- **`HOST`**（可选）：服务监听地址（如果未设置 `APIKEY`，出于安全考虑默认为 `127.0.0.1`）
+
+### 提供商配置
+
+每个提供商需要：
+
+- **`name`**: 唯一提供商标识符
+- **`api_base_url`**: API 端点 URL
+- **`api_keys`**: API keys 数组（必需，即使只有一个 key）
+- **`models`**: 可用模型列表
+- **`transformer`**（可选）：请求/响应转换器配置
+
+### 路由规则
+
+定义不同场景使用的模型：
+
+- **`default`**: 一般任务（推荐：高质量模型）
+- **`background`**: 后台/批处理任务（推荐：快速、经济的模型）
+- **`think`**: 推理密集型任务（推荐：最强能力模型）
+- **`longContext`**: 长对话/文档（推荐：大上下文模型）
+
+### 支持的提供商
+
+- **Gemini**: Google 的 Gemini 模型 API
+- **DeepSeek**: DeepSeek Chat 和 Reasoner 模型
+- **OpenRouter**: 通过 OpenRouter 访问多种模型
+- **Groq**: 高速推理模型
+- **SiliconFlow**: 其他模型提供商
+- **Volcengine**: 字节跳动的模型平台
+- **自定义**: 任何 OpenAI 兼容的 API
+
+## 🔧 内置转换器
+
+转换器处理不同提供商 API 之间的兼容性：
+
+- **`deepseek`**: 适配 DeepSeek API 格式
+- **`gemini`**: 适配 Google Gemini API 格式
+- **`openrouter`**: 适配 OpenRouter API 格式
+- **`groq`**: 适配 Groq API 格式
+- **`maxtoken`**: 设置最大 token 限制
+- **`tooluse`**: 优化工具调用功能
+
+## 📋 完整配置示例
+
+### 多提供商设置
 ```json
 {
-  // "APIKEY": "your-access-key",  // 可选：访问控制密钥
   "PROXY_URL": "http://127.0.0.1:7890",
   "LOG": true,
   "HOST": "0.0.0.0",
@@ -266,139 +374,44 @@ Claude Code Router 现在支持多个 API Key 轮询功能，可以自动在多�
     {
       "name": "gemini",
       "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
-      "api_keys": [
-        {
-          "key": "sk-xxx1",
-          "weight": 2,
-          "maxFailures": 5,
-          "cooldownTime": 60000
-        },
-        {
-          "key": "sk-xxx2",
-          "weight": 1,
-          "maxFailures": 3,
-          "cooldownTime": 30000
-        }
-      ],
+      "api_keys": ["gemini-key-1", "gemini-key-2"],
       "enable_rotation": true,
-      "rotation_strategy": "weighted",
-      "retry_on_failure": true,
-      "max_retries": 3,
-      "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
+      "rotation_strategy": "round_robin",
+      "models": ["gemini-2.5-pro", "gemini-2.5-flash"],
       "transformer": { "use": ["gemini"] }
+    },
+    {
+      "name": "deepseek",
+      "api_base_url": "https://api.deepseek.com/chat/completions",
+      "api_keys": ["deepseek-key-1"],
+      "models": ["deepseek-chat", "deepseek-reasoner"],
+      "transformer": { "use": ["deepseek"] }
     }
   ],
   "Router": {
     "default": "gemini,gemini-2.5-pro",
     "background": "gemini,gemini-2.5-flash",
-    "think": "gemini,gemini-2.5-pro",
+    "think": "deepseek,deepseek-reasoner",
     "longContext": "gemini,gemini-2.5-pro"
   }
 }
 ```
 
-### 轮询策略
-
-- **`round_robin`** (默认): 轮询方式，按顺序使用每个API Key
-- **`random`**: 随机选择API Key
-- **`weighted`**: 加权轮询，根据权重分配请求
-- **`least_used`**: 最少使用优先
-
-### 配置参数说明
-
-- **`api_keys`**: API Key 列表，可以是字符串数组或对象数组
-- **`enable_rotation`**: 是否启用轮询功能 (默认: true)
-- **`rotation_strategy`**: 轮询策略 (默认: round_robin)
-- **`retry_on_failure`**: 失败时是否重试 (默认: true)
-- **`max_retries`**: 最大重试次数 (默认: 3)
-
-### 向后兼容性
-
-系统完全支持向后兼容：
-
-- 如果配置了 `api_key`（单个），系统会使用单个API Key模式
-- 如果配置了 `api_keys`（多个），系统会启用API Key轮询模式
-- 两种模式可以同时存在于不同的提供商中
-
-#### API Key 对象配置
-- **`key`**: API Key 字符串
-- **`weight`**: 权重，用于加权轮询 (默认: 1)
-- **`maxFailures`**: 最大失败次数，超过后禁用该Key
-- **`cooldownTime`**: 冷却时间（毫秒），失败后等待时间
-
-### 监控和管理
-
-#### 查看轮询状态
-```bash
-# 查看基本状态（包含轮询信息）
-ccr status
-
-# 查看详细轮询状态
-ccr rotation
+### SiliconFlow 提供商示例
+```json
+{
+  "name": "siliconflow",
+  "api_base_url": "https://api.siliconflow.cn/v1/chat/completions",
+  "api_keys": ["your-siliconflow-key"],
+  "models": ["moonshotai/Kimi-K2-Instruct"],
+  "transformer": {
+    "use": ["maxtoken"],
+    "max_tokens": 16384
+  }
+}
 ```
 
-#### 状态信息说明
-- **Total Keys**: 总API Key数量
-- **Available Keys**: 当前可用的API Key数量
-- **Key Status**: 每个API Key的状态
-  - ✅ 活跃状态
-  - ❌ 禁用状态（超过最大失败次数）
-  - 失败次数显示
-
-### 错误处理
-
-- **自动重试**: 当API Key失败时，自动切换到下一个可用的Key
-- **失败计数**: 记录每个Key的失败次数
-- **冷却机制**: 失败的Key会进入冷却期，避免频繁重试
-- **自动恢复**: 成功的请求会重置失败计数
-
-## 🎮 使用方法
-
-### 基本命令
-
-```bash
-# 启动服务
-ccr start
-
-# 停止服务
-ccr stop
-
-# 查看服务状态（包含API Key轮询信息）
-ccr status
-
-# 查看详细API Key轮询状态
-ccr rotation
-
-# 执行代码命令
-ccr code
-
-# 一键测试所有API Key和模型
-ccr test
-
-# 查看版本
-ccr -v
-
-# 查看帮助
-ccr -h
-```
-
-### 服务管理
-
-Claude Code Router 支持后台服务模式：
-
-- **`ccr start`**: 启动后台服务，服务会在端口 3456 上运行
-- **`ccr stop`**: 停止后台服务
-- **`ccr status`**: 查看服务运行状态和API Key轮询状态
-- **`ccr rotation`**: 查看详细的API Key轮询状态，包括每个Key的使用情况和失败次数
-
-### 自动服务启动
-
-当您运行 `ccr code` 时，如果服务未运行，系统会自动启动服务：
-
-```bash
-# 如果服务未运行，会自动启动
-ccr code "写一个Hello World程序"
-```
+## 🎯 高级功能
 
 ### 动态模型切换
 
@@ -410,62 +423,154 @@ ccr code "写一个Hello World程序"
 
 示例：
 ```
-/model openrouter,anthropic/claude-3.5-sonnet
+/model gemini,gemini-2.5-pro
 /model deepseek,deepseek-reasoner
+/model openrouter,anthropic/claude-3.5-sonnet
 ```
 
 ### 传递参数给 Claude Code
 
-Claude Code Router 支持将任何参数传递给原始的 Claude Code。您可以在 `ccr code` 命令后添加任何 Claude Code 支持的参数：
+支持所有 Claude Code 参数：
 
 ```bash
-# 使用 --dangerously-skip-permissions 参数
+# 跳过权限提示
 ccr code --dangerously-skip-permissions
 
-# 传递其他参数
+# 获取 Claude Code 帮助
 ccr code --help
-ccr code "写一个 Hello World 程序"
+
+# 直接命令
+ccr code "解释这个代码库"
 ```
 
-## 🔧 配置详解
+## 🔍 常见问题
 
-### 全局配置项
+### Q: 如何检查我的 API keys 是否正常工作？
 
-- **`APIKEY`** (可选): 设置访问控制密钥，保护服务不被未授权访问。设置后，客户端请求必须在 `Authorization` 请求头 (例如, `Bearer your-access-key`) 或 `x-api-key` 请求头中提供此密钥。如果不设置，服务将只接受本地连接 (127.0.0.1)
-- **`PROXY_URL`** (可选): 设置代理服务器地址，例如：`"PROXY_URL": "http://127.0.0.1:7890"`
-- **`LOG`** (可选): 启用日志记录，日志文件位于 `$HOME/.claude-code-router.log`
-- **`HOST`** (可选): 设置服务监听地址。如果未设置 `APIKEY`，出于安全考虑，主机地址将强制设置为 `127.0.0.1`，以防止未经授权的访问
+**A**: 使用内置测试命令：
+```bash
+ccr test
+```
+这会测试所有 API keys 和模型，显示详细结果。
 
-### Providers 配置
+### Q: 如果 API key 失败了怎么办？
 
-每个 provider 需配置以下字段：
+**A**: 轮询系统会自动：
+- 切换到下一个可用的 key
+- 跟踪失败计数
+- 实施冷却期
+- 重试失败的请求
 
-- **`name`**：唯一 provider 名称
-- **`api_base_url`**：API 端点地址
-- **`api_keys`**：API key 数组（轮询模式，单 key 也必须写在数组中）
-- **`models`**：可用模型列表
-- **`transformer`**（可选）：请求/响应转换器
+### Q: 如何监控 API key 状态？
 
-### Router 配置
+**A**: 使用状态命令：
+```bash
+ccr status      # 基本状态
+ccr rotation    # 详细轮询状态
+```
 
-路由规则定义不同场景使用的模型：
+### Q: 可以使用不同的轮询策略吗？
 
-- **`default`**: 默认模型，用于一般任务（使用 gemini-2.5-pro 获得最佳质量）
-- **`background`**: 后台任务模型（使用 gemini-2.5-flash 进行更快、更便宜的处理）
-- **`think`**: 思考模型，用于推理密集型任务（使用 gemini-2.5-pro 获得更好的推理能力）
-- **`longContext`**: 长上下文模型，处理超过 60K token 的对话（使用 gemini-2.5-pro 进行上下文处理）
+**A**: 可以！支持的策略：
+- `round_robin`: 顺序轮询
+- `random`: 随机选择
+- `weighted`: 基于权重
+- `least_used`: 最少使用
 
-#### 智能模型选择策略
-- **后台任务**（如代码生成、简单问答）→ **gemini-2.5-flash**（更快、更便宜）
-- **复杂推理、分析、创意任务** → **gemini-2.5-pro**（更好的质量、更强的能力）
-- **长对话、上下文密集型任务** → **gemini-2.5-pro**（更好的上下文理解）
+### Q: 如何启用日志记录？
 
-## 🔧 转换器 (Transformers)
+**A**: 在配置中设置 `"LOG": true`。日志保存到 `$HOME/.claude-code-router.log`。
 
-转换器用于处理不同提供商 API 的兼容性问题。
+### Q: 代理支持如何？
 
-### 内置转换器
+**A**: 支持通过 `PROXY_URL` 使用 HTTP/HTTPS 代理。SOCKS5 仅在测试命令中支持，主服务不支持。
 
-- **`deepseek`**: 适配 DeepSeek API
-- **`gemini`**: 适配 Gemini API
-- **`
+## 🛠️ 故障排除
+
+### 服务无法启动
+
+1. **检查配置**：
+   ```bash
+   # 验证配置文件存在且 JSON 有效
+   cat ~/.claude-code-router/config.json | jq .
+   ```
+
+2. **测试 API keys**：
+   ```bash
+   ccr test
+   ```
+
+3. **检查端口可用性**：
+   ```bash
+   netstat -tulpn | grep 3456
+   # 或
+   lsof -i :3456
+   ```
+
+4. **查看日志**（如果启用了日志记录）：
+   ```bash
+   tail -f ~/.claude-code-router.log
+   ```
+
+### API Key 问题
+
+1. **测试单个 keys**：
+   ```bash
+   ccr test
+   ```
+
+2. **检查轮询状态**：
+   ```bash
+   ccr rotation
+   ```
+
+3. **重置服务**（清除 key 失败计数）：
+   ```bash
+   ccr stop
+   ccr start
+   ```
+
+### 网络问题
+
+1. **测试连接性**：
+   ```bash
+   curl -I https://generativelanguage.googleapis.com
+   ```
+
+2. **使用代理测试**：
+   ```bash
+   curl --proxy http://127.0.0.1:7890 -I https://generativelanguage.googleapis.com
+   ```
+
+3. **检查 config.json 中的代理配置**
+
+## 📄 许可证
+
+MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+## 🤝 贡献
+
+欢迎贡献！请随时提交 issues 和 pull requests。
+
+### 开发
+
+```bash
+# 克隆仓库
+git clone https://github.com/tellerlin/claude-code-router.git
+cd claude-code-router
+
+# 安装依赖
+npm install
+
+# 构建项目
+npm run build
+
+# 本地测试
+node dist/cli.js --help
+```
+
+## 🙏 致谢
+
+- [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router) - 原始项目
+- [Anthropic](https://anthropic.com) - Claude Code
+- [@musistudio/llms](https://github.com/musistudio/llms) - LLM 兼容性库

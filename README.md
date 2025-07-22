@@ -14,7 +14,9 @@ This is a fork of [musistudio/claude-code-router](https://github.com/musistudio/
 - **Multiple Rotation Strategies**: round_robin, random, weighted, least_used
 - **Smart Error Handling**: Automatic retry, failure counting, cooldown mechanism
 - **Status Monitoring**: Real-time monitoring of API key rotation status
-- **Backward Compatibility**: All original features remain unchanged
+- **Enhanced CLI**: Improved command-line interface with detailed status information
+- **Background Service**: Automatic service management with proper cleanup
+- **Comprehensive Testing**: Built-in testing for all API keys and models
 
 ### 🔗 Links
 
@@ -37,7 +39,9 @@ This is a fork of [musistudio/claude-code-router](https://github.com/musistudio/
 -   **API Key Rotation**: Support for multiple API keys with automatic rotation and load balancing
 -   **Multiple Rotation Strategies**: round_robin, random, weighted, least_used
 -   **Smart Error Handling**: Automatic retry, failure counting, cooldown mechanism
--   **Status Monitoring**: Real-time monitoring of API key rotation status via `ccr rotation` command
+-   **Status Monitoring**: Real-time monitoring of API key rotation status via `ccr status` and `ccr rotation` commands
+-   **Enhanced Testing**: Comprehensive testing suite with `ccr test` command for all models and API keys
+-   **Background Service Management**: Proper service lifecycle with automatic startup and cleanup
 
 ## 🚀 Getting Started
 
@@ -57,20 +61,22 @@ npm install -g @tellerlin/claude-code-router
 
 ### 2. Configuration
 
-#### Step 1: Quick Setup (Recommended)
+#### Quick Setup (Recommended)
 ```bash
 # Use the automatic setup command
 ccr setup
 ```
 
-This will automatically create the configuration directory and copy the template file.
+This will automatically:
+- Create the configuration directory (`~/.claude-code-router/`)
+- Generate a template configuration file
+- Provide setup instructions
 
-#### Step 2: Manual Setup (Alternative)
+#### Manual Setup (Alternative)
 If you prefer manual setup:
 
 **Create Configuration Directory**
 ```bash
-# Create the configuration directory
 mkdir -p ~/.claude-code-router
 ```
 
@@ -80,9 +86,7 @@ mkdir -p ~/.claude-code-router
 cp $(npm root -g)/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
-This template has all providers commented out by default, with only Gemini enabled as an example. To enable a provider, simply remove the `//` comments from the beginning of each line in that provider's configuration block.
-
-**Alternative method (if the above doesn't work):**
+**Alternative method:**
 ```bash
 # Find the package location
 npm root -g
@@ -91,38 +95,17 @@ npm root -g
 cp /usr/local/lib/node_modules/@tellerlin/claude-code-router/config.example.with-rotation.json ~/.claude-code-router/config.json
 ```
 
-#### Step 3: Edit Configuration File
+#### Edit Configuration
 ```bash
 # Edit the configuration file with your preferred editor
 nano ~/.claude-code-router/config.json
-# or use vim
+# or
 vim ~/.claude-code-router/config.json
-# or use VS Code
+# or
 code ~/.claude-code-router/config.json
 ```
 
-#### Step 4: Configure Your Settings
-Replace the placeholder values in the configuration file:
-
-1. **Replace API Keys**: Replace `"sk-xxx"` with your actual API keys (must be in the `api_keys` array, even if only one key)
-2. **Update Provider URLs**: Ensure the `api_base_url` points to your desired provider
-3. **Set Your Secret Key**: Replace `"your-secret-key"` with a secure key for authentication
-4. **Configure Proxy** (optional): Set `PROXY_URL` if you need to use a proxy
-
-#### Step 5: Save and Exit
-- **For nano**: Press `Ctrl+X`, then `Y`, then `Enter`
-- **For vim**: Press `Esc`, type `:wq`, then press `Enter`
-- **For VS Code**: Press `Ctrl+S` to save, then close the editor
-
-#### Configuration File Location
-- **Path**: `~/.claude-code-router/config.json`
-- **Global Configuration**: This configuration file is global and applies to all projects on your system
-- **Security Note**: The configuration file contains sensitive API keys and should never be committed to version control
-- **Example file** (available in the installed package): 
-  - `config.example.with-rotation.json` - Configuration template with API key rotation support (recommended)
-- **Package location**: Use `npm root -g` to find where the package is installed
-
-#### Basic Configuration Example
+### 3. Basic Configuration Example
 
 ```json
 {
@@ -131,118 +114,140 @@ Replace the placeholder values in the configuration file:
   "HOST": "0.0.0.0",
   "Providers": [
     {
-      "name": "deepseek",
-      "api_base_url": "https://api.deepseek.com/chat/completions",
-      "api_keys": ["sk-xxx"],
-      "models": ["deepseek-chat", "deepseek-reasoner"],
-      "transformer": {
-        "use": ["deepseek"],
-        "deepseek-chat": { "use": ["tooluse"] }
-      }
-    },
-    {
-      "name": "openrouter",
-      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
-      "api_keys": ["sk-xxx"],
-      "models": [
-        "google/gemini-2.5-pro-preview",
-        "anthropic/claude-3.5-sonnet"
+      "name": "gemini",
+      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "api_keys": [
+        "YOUR_GEMINI_API_KEY_1",
+        "YOUR_GEMINI_API_KEY_2",
+        "YOUR_GEMINI_API_KEY_3"
       ],
-      "transformer": { "use": ["openrouter"] }
+      "enable_rotation": true,
+      "rotation_strategy": "round_robin",
+      "retry_on_failure": true,
+      "max_retries": 3,
+      "models": ["gemini-2.5-pro", "gemini-2.5-flash"],
+      "transformer": { "use": ["gemini"] }
     }
   ],
   "Router": {
-    "default": "deepseek,deepseek-chat",
-    "background": "ollama,qwen2.5-coder:latest",
-    "think": "deepseek,deepseek-reasoner",
-    "longContext": "openrouter,google/gemini-2.5-pro-preview"
-  },
-  "APIKEY_optional": "(Optional) Set this field to enable global API authentication. Remove this line if not needed."
+    "default": "gemini,gemini-2.5-pro",
+    "background": "gemini,gemini-2.5-flash",
+    "think": "gemini,gemini-2.5-pro",
+    "longContext": "gemini,gemini-2.5-pro"
+  }
 }
 ```
 
-> **Note:**
-> - The `APIKEY` field is **optional**. Only add it if you want to enable global API authentication for all requests. If not needed, simply remove or ignore this field.
-> - All providers **must** use `api_keys` (array). If you only have one key, put it in the array.
+> **Important Notes:**
+> - All providers **must** use `api_keys` (array format), even for a single key
+> - The `APIKEY` field is optional for global authentication
+> - Proxy support: HTTP/HTTPS proxies only (SOCKS5 not supported in main service)
 
-### 3. Running
+## 🎮 Usage
 
-#### First Time Setup
-If this is your first time running the tool, it will guide you through an interactive setup:
-
-```bash
-ccr code
-```
-
-The system will ask you to provide:
-- Provider name
-- API key
-- Provider URL
-- Model name
-
-#### Normal Usage
-After configuration, simply run:
+### Basic Commands
 
 ```bash
-ccr code
-```
+# Start background service
+ccr start
 
-#### Test All API Keys and Models
-To quickly verify all your configured API keys and models are working, use:
+# Stop background service
+ccr stop
 
-```bash
-ccr test
-```
-
-This will automatically test every model+apikey combination in your config.json and print detailed logs for troubleshooting.
-
-#### Verify Installation
-To check if everything is working:
-
-```bash
-# Check service status
+# View service status and API key rotation information
 ccr status
 
-# Check version
+# View detailed API key rotation status
+ccr rotation
+
+# Execute Claude Code (auto-starts service if needed)
+ccr code "Write a Hello World program"
+
+# Test all models and API keys in config.json
+ccr test
+
+# Initialize configuration
+ccr setup
+
+# View version
 ccr -v
 
-# Get help
+# View help
 ccr -h
 ```
 
+### Service Management
+
+Claude Code Router operates as a background service:
+
+- **`ccr start`**: Start the background service (runs on port 3456)
+- **`ccr stop`**: Stop the background service
+- **`ccr status`**: View service status including API key rotation information
+- **`ccr code`**: Execute Claude Code commands (automatically starts service if needed)
+
+### Testing and Validation
+
+```bash
+# Test all configured API keys and models
+ccr test
+```
+
+This command will:
+- Test every API key and model combination in your configuration
+- Show detailed status for each key (success/failure)
+- Display response times and error messages
+- Provide a summary of working vs failed keys
+
+### Detailed Status Monitoring
+
+```bash
+# View basic service status
+ccr status
+
+# View detailed API key rotation status
+ccr rotation
+```
+
+The status commands show:
+- Service running status (PID)
+- API key rotation configuration
+- Individual key status (active/inactive)
+- Failure counts and last usage times
+- Available vs total keys
+
 ## 🔄 API Key Rotation Feature
 
-Claude Code Router now supports multiple API Key rotation functionality, automatically switching between multiple API Keys to improve availability and load balancing.
+Claude Code Router supports advanced API key rotation with multiple strategies and smart error handling.
 
-### Configuration
-
-#### Basic Rotation Configuration
-    ```json
-     {
+### Basic Rotation Configuration
+```json
+{
   "name": "gemini",
   "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
-  "api_keys": ["sk-xxx1", "sk-xxx2", "sk-xxx3"],
+  "api_keys": ["key1", "key2", "key3"],
   "enable_rotation": true,
   "rotation_strategy": "round_robin",
+  "retry_on_failure": true,
+  "max_retries": 3,
   "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
   "transformer": { "use": ["gemini"] }
 }
 ```
 
-#### Advanced Rotation Configuration
-    ```json
-     {
+### Advanced Rotation Configuration
+```json
+{
   "name": "gemini",
   "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
   "api_keys": [
     {
-      "key": "sk-xxx1",
+      "key": "key1",
       "weight": 2,
       "maxFailures": 5,
       "cooldownTime": 60000
     },
     {
-      "key": "sk-xxx2",
+      "key": "key2",
       "weight": 1,
       "maxFailures": 3,
       "cooldownTime": 30000
@@ -257,49 +262,6 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 }
 ```
 
-#### Complete Configuration with Router Rules
-
-```json
-{
-  // "APIKEY": "your-access-key",  // Optional: Access control key
-  "PROXY_URL": "http://127.0.0.1:7890",
-  "LOG": true,
-  "HOST": "0.0.0.0",
-  "Providers": [
-    {
-      "name": "gemini",
-      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
-      "api_keys": [
-        {
-          "key": "sk-xxx1",
-          "weight": 2,
-          "maxFailures": 5,
-          "cooldownTime": 60000
-        },
-        {
-          "key": "sk-xxx2",
-          "weight": 1,
-          "maxFailures": 3,
-          "cooldownTime": 30000
-        }
-      ],
-      "enable_rotation": true,
-      "rotation_strategy": "weighted",
-      "retry_on_failure": true,
-      "max_retries": 3,
-      "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
-      "transformer": { "use": ["gemini"] }
-    }
-  ],
-  "Router": {
-    "default": "gemini,gemini-2.5-pro",
-    "background": "gemini,gemini-2.5-flash",
-    "think": "gemini,gemini-2.5-pro",
-    "longContext": "gemini,gemini-2.5-pro"
-  }
-}
-```
-
 ### Rotation Strategies
 
 - **`round_robin`** (default): Round-robin rotation, using each API Key in sequence
@@ -309,7 +271,7 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 
 ### Configuration Parameters
 
-- **`api_keys`**: API Key list, can be string array or object array
+- **`api_keys`**: API Key list (string array or object array)
 - **`enable_rotation`**: Whether to enable rotation (default: true)
 - **`rotation_strategy`**: Rotation strategy (default: round_robin)
 - **`retry_on_failure`**: Whether to retry on failure (default: true)
@@ -321,91 +283,141 @@ Claude Code Router now supports multiple API Key rotation functionality, automat
 - **`maxFailures`**: Maximum failure count before disabling the Key
 - **`cooldownTime`**: Cooldown time (milliseconds) after failure
 
-### Backward Compatibility
+### Status Monitoring
 
-The system fully supports backward compatibility:
+Monitor API key rotation with built-in commands:
 
-- If `api_key` (single) is configured, the system uses single API Key mode
-- If `api_keys` (multiple) is configured, the system enables API Key rotation mode
-- Both modes can coexist in different providers
-
-### Monitoring and Management
-
-#### View Rotation Status
 ```bash
-# View basic status (includes rotation information)
+# Basic status (includes rotation info)
 ccr status
 
-# View detailed rotation status
+# Detailed rotation status
 ccr rotation
 ```
 
-#### Status Information
-- **Total Keys**: Total number of API Keys
-- **Available Keys**: Number of currently available API Keys
-- **Key Status**: Status of each API Key
-  - ✅ Active status
-  - ❌ Disabled status (exceeded maximum failure count)
-  - Failure count display
+Example output:
+```
+🚀 Claude Code Router v1.0.68
+✅ Service is running (PID: 12345)
 
-### Error Handling
+📊 API Key Rotation Status:
+============================================================
 
-- **Automatic Retry**: When an API Key fails, automatically switch to the next available Key
-- **Failure Counting**: Record failure count for each Key
-- **Cooldown Mechanism**: Failed Keys enter a cooldown period to avoid frequent retries
-- **Automatic Recovery**: Successful requests reset failure count
+🔧 Provider: gemini
+   Strategy: round_robin
+   Total Keys: 3
+   Available Keys: 3
+   Key Status:
+     ✅ AIzaSyAV... (0 failures)
+     ✅ AIzaSyCf... (0 failures)
+     ✅ AIzaSyCd... (0 failures)
 
-## 🎮 Usage
-
-### Basic Commands
-
-```bash
-# Start service
-ccr start
-
-# Stop service
-ccr stop
-
-# View service status (includes API Key rotation information)
-ccr status
-
-# View detailed API Key rotation status
-ccr rotation
-
-# Execute code command
-ccr code
-
-# Test all models and API keys in config.json
-ccr test
-
-# View version
-ccr -v
-
-# View help
-ccr -h
+============================================================
 ```
 
-### Service Management
+## 🔧 Configuration Details
 
-Claude Code Router supports background service mode:
+### Global Configuration
 
-- **`ccr start`**: Start background service, runs on port 3456
-- **`ccr stop`**: Stop background service
-- **`ccr status`**: View service running status and API Key rotation status
-- **`ccr rotation`**: View detailed API Key rotation status, including usage and failure count for each Key
+- **`APIKEY`** (optional): Global access control key. When set, all requests must include this key in `Authorization` header (`Bearer your-key`) or `x-api-key` header
+- **`PROXY_URL`** (optional): HTTP/HTTPS proxy server (e.g., `"http://127.0.0.1:7890"`)
+- **`LOG`** (optional): Enable logging to `$HOME/.claude-code-router.log`
+- **`HOST`** (optional): Service listening address (defaults to `127.0.0.1` for security if no `APIKEY` is set)
 
-### Automatic Service Startup
+### Provider Configuration
 
-When you run `ccr code`, if the service is not running, the system will automatically start it:
+Each provider requires:
 
-```bash
-# If service is not running, it will start automatically
-ccr code "Write a Hello World program"
+- **`name`**: Unique provider identifier
+- **`api_base_url`**: API endpoint URL
+- **`api_keys`**: Array of API keys (required, even for single key)
+- **`models`**: List of available models
+- **`transformer`** (optional): Request/response transformer configuration
+
+### Routing Rules
+
+Define which models to use for different scenarios:
+
+- **`default`**: General tasks (recommended: high-quality model)
+- **`background`**: Background/batch tasks (recommended: fast, cost-effective model)
+- **`think`**: Reasoning-intensive tasks (recommended: most capable model)
+- **`longContext`**: Long conversations/documents (recommended: large context model)
+
+### Supported Providers
+
+- **Gemini**: Google's Gemini models via API
+- **DeepSeek**: DeepSeek Chat and Reasoner models
+- **OpenRouter**: Access to multiple models via OpenRouter
+- **Groq**: High-speed inference models
+- **SiliconFlow**: Additional model providers
+- **Volcengine**: ByteDance's model platform
+- **Custom**: Any OpenAI-compatible API
+
+## 🔧 Built-in Transformers
+
+Transformers handle compatibility between different provider APIs:
+
+- **`deepseek`**: Adapts DeepSeek API format
+- **`gemini`**: Adapts Google Gemini API format
+- **`openrouter`**: Adapts OpenRouter API format
+- **`groq`**: Adapts Groq API format
+- **`maxtoken`**: Sets maximum token limits
+- **`tooluse`**: Optimizes tool calling functionality
+
+## 📋 Complete Configuration Examples
+
+### Multi-Provider Setup
+```json
+{
+  "PROXY_URL": "http://127.0.0.1:7890",
+  "LOG": true,
+  "HOST": "0.0.0.0",
+  "Providers": [
+    {
+      "name": "gemini",
+      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "api_keys": ["gemini-key-1", "gemini-key-2"],
+      "enable_rotation": true,
+      "rotation_strategy": "round_robin",
+      "models": ["gemini-2.5-pro", "gemini-2.5-flash"],
+      "transformer": { "use": ["gemini"] }
+    },
+    {
+      "name": "deepseek",
+      "api_base_url": "https://api.deepseek.com/chat/completions",
+      "api_keys": ["deepseek-key-1"],
+      "models": ["deepseek-chat", "deepseek-reasoner"],
+      "transformer": { "use": ["deepseek"] }
+    }
+  ],
+  "Router": {
+    "default": "gemini,gemini-2.5-pro",
+    "background": "gemini,gemini-2.5-flash",
+    "think": "deepseek,deepseek-reasoner",
+    "longContext": "gemini,gemini-2.5-pro"
+  }
+}
 ```
+
+### SiliconFlow Provider Example
+```json
+{
+  "name": "siliconflow",
+  "api_base_url": "https://api.siliconflow.cn/v1/chat/completions",
+  "api_keys": ["your-siliconflow-key"],
+  "models": ["moonshotai/Kimi-K2-Instruct"],
+  "transformer": {
+    "use": ["maxtoken"],
+    "max_tokens": 16384
+  }
+}
+```
+
+## 🎯 Advanced Features
 
 ### Dynamic Model Switching
 
-Switch models in Claude Code using the `/model` command:
+Switch models within Claude Code using the `/model` command:
 
 ```
 /model provider_name,model_name
@@ -413,232 +425,156 @@ Switch models in Claude Code using the `/model` command:
 
 Examples:
 ```
-/model openrouter,anthropic/claude-3.5-sonnet
+/model gemini,gemini-2.5-pro
 /model deepseek,deepseek-reasoner
+/model openrouter,anthropic/claude-3.5-sonnet
 ```
 
 ### Passing Parameters to Claude Code
 
-Claude Code Router supports passing any parameters to the original Claude Code. You can add any Claude Code supported parameters after the `ccr code` command:
+All Claude Code parameters are supported:
 
 ```bash
-# Use --dangerously-skip-permissions parameter
+# Skip permission prompts
 ccr code --dangerously-skip-permissions
 
-# Pass other parameters
+# Get help for Claude Code
 ccr code --help
-ccr code "Write a Hello World program"
+
+# Direct commands
+ccr code "Explain this codebase"
 ```
-
-## 🔧 Configuration Details
-
-### Global Configuration Items
-
-- **`APIKEY`** (optional): Set access control key to protect the service from unauthorized access. When set, client requests must provide this key in the `Authorization` header (e.g., `Bearer your-access-key`) or `x-api-key` header. If not set, the service will only accept local connections (127.0.0.1)
-- **`PROXY_URL`** (optional): Set proxy server address, e.g.: `"PROXY_URL": "http://127.0.0.1:7890"`
-- **`LOG`** (optional): Enable logging, log file located at `$HOME/.claude-code-router.log`
-- **`HOST`** (optional): Set service listening address. If `APIKEY` is not set, the host address will be forced to `127.0.0.1` for security reasons to prevent unauthorized access
-
-### Providers Configuration
-
-Each provider needs to configure the following fields:
-
-- **`name`**: Unique provider name
-- **`api_base_url`**: API endpoint address
-- **`api_keys`**: API keys (rotation mode, array, required even for a single key)
-- **`models`**: Available model list
-- **`transformer`** (optional): Request/response transformer
-
-### Router Configuration
-
-Routing rules define which model to use for different scenarios:
-
-- **`default`**: Default model for general tasks (uses gemini-2.5-pro for best quality)
-- **`background`**: Background task model (uses gemini-2.5-flash for faster, cheaper processing)
-- **`think`**: Thinking model for reasoning-intensive tasks (uses gemini-2.5-pro for better reasoning)
-- **`longContext`**: Long context model for handling conversations over 60K tokens (uses gemini-2.5-pro for context handling)
-
-#### Smart Model Selection Strategy
-- **Background tasks** (like code generation, simple Q&A) → **gemini-2.5-flash** (faster, cheaper)
-- **Complex reasoning, analysis, creative tasks** → **gemini-2.5-pro** (better quality, more capable)
-- **Long conversations, context-heavy tasks** → **gemini-2.5-pro** (better context understanding)
-
-## 🔧 Transformers
-
-Transformers are used to handle compatibility issues between different provider APIs.
-
-### Built-in Transformers
-
-- **`deepseek`**: Adapts DeepSeek API
-- **`gemini`**: Adapts Gemini API
-- **`openrouter`**: Adapts OpenRouter API
-- **`groq`**: Adapts Groq API
-- **`maxtoken`**: Sets maximum token count
-- **`tooluse`**: Optimizes tool calls
-- **`gemini-cli`** (experimental): Support via Gemini CLI
 
 ## 🔍 FAQ
 
-### Q: Does Gemini support multiple API Key rotation?
+### Q: How do I check if my API keys are working?
 
-**A**: **Yes!** Claude Code Router now fully supports multiple API Key rotation functionality. You can configure it as follows:
-
-#### Basic Rotation Configuration
-```json
-{
-  "name": "gemini",
-  "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
-  "api_keys": ["sk-xxx1", "sk-xxx2", "sk-xxx3"],
-  "enable_rotation": true,
-  "rotation_strategy": "round_robin",
-  "models": ["gemini-2.5-flash", "gemini-2.5-pro"]
-}
-```
-
-### Q: How to enable `--dangerously-skip-permissions` parameter?
-
-**A**: Use the following command directly:
-
+**A**: Use the built-in test command:
 ```bash
-ccr code --dangerously-skip-permissions
+ccr test
+```
+This tests all API keys and models, showing detailed results.
+
+### Q: What if an API key fails?
+
+**A**: The rotation system automatically:
+- Switches to the next available key
+- Tracks failure counts
+- Implements cooldown periods
+- Retries failed requests
+
+### Q: How do I monitor API key status?
+
+**A**: Use the status commands:
+```bash
+ccr status      # Basic status
+ccr rotation    # Detailed rotation status
 ```
 
-Claude Code Router passes all parameters directly to the original Claude Code, so it supports all native Claude Code parameters.
+### Q: Can I use different rotation strategies?
 
-### Q: How to view logs?
+**A**: Yes! Supported strategies:
+- `round_robin`: Sequential rotation
+- `random`: Random selection
+- `weighted`: Based on key weights
+- `least_used`: Least recently used
 
-**A**: Set `"LOG": true` in the configuration file, and the log file will be saved at `$HOME/.claude-code-router.log`.
+### Q: How do I enable logging?
 
-### Q: How to reset API Key status?
+**A**: Set `"LOG": true` in your config. Logs are saved to `$HOME/.claude-code-router.log`.
 
-**A**: The system automatically manages API Key status. Failed Keys will automatically recover after the cooldown period, or you can restart the service to reset all status.
+### Q: What about proxy support?
 
-### Q: What rotation strategies are supported?
-
-**A**: 4 rotation strategies are supported:
-- **`round_robin`**: Round-robin rotation, using each API Key in sequence
-- **`random`**: Random selection of API Keys
-- **`weighted`**: Weighted rotation based on weights
-- **`least_used`**: Least-used priority, selecting the least recently used Key
+**A**: HTTP/HTTPS proxies are supported via `PROXY_URL`. SOCKS5 is only supported in the test command, not the main service.
 
 ## 🛠️ Troubleshooting
 
-### Service Startup Failure
+### Service Won't Start
 
-1. **Check Configuration File**:
+1. **Check configuration**:
    ```bash
-   # Verify the configuration file exists
-   ls -la ~/.claude-code-router/config.json
-   
-   # Check JSON syntax
+   # Verify config file exists and is valid JSON
    cat ~/.claude-code-router/config.json | jq .
    ```
 
-2. **Validate API Keys**:
+2. **Test API keys**:
    ```bash
-   # Test your API key with curl (example for DeepSeek)
-   curl -X POST "https://api.deepseek.com/chat/completions" \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer YOUR_API_KEY" \
-     -d '{"model":"deepseek-chat","messages":[{"role":"user","content":"Hello"}]}'
+   ccr test
    ```
 
-3. **Check Network and Proxy**:
+3. **Check port availability**:
    ```bash
-   # Test network connectivity
-   ping api.deepseek.com
-   
-   # Test proxy if configured
-   curl --proxy http://127.0.0.1:7890 https://api.deepseek.com
-   ```
-
-4. **View Logs**:
-   ```bash
-   # Enable logging in config.json: "LOG": true
-   # Then check the log file
-   tail -f ~/.claude-code-router.log
-   ```
-
-5. **Check Port Usage**:
-   ```bash
-   # Check if port 3456 is occupied
    netstat -tulpn | grep 3456
    # or
    lsof -i :3456
    ```
 
-6. **Test All API Keys and Models**:
+4. **View logs** (if logging enabled):
    ```bash
-   # Use the built-in test command to check all configured API keys and models
+   tail -f ~/.claude-code-router.log
+   ```
+
+### API Key Issues
+
+1. **Test individual keys**:
+   ```bash
    ccr test
    ```
-   This will help you quickly identify which key or model is failing and provide detailed error logs.
 
-### API Key Rotation Issues
+2. **Check rotation status**:
+   ```bash
+   ccr rotation
+   ```
 
-1. **All API Keys unavailable**: Check if API Keys are valid, view failure count and cooldown time
-2. **Rotation strategy not working**: Confirm `enable_rotation` is set to `true`
-3. **Retry failure**: Check `retry_on_failure` and `max_retries` configuration
-4. **Weighted rotation imbalance**: Confirm `weight` values are set correctly
+3. **Reset service** (clears key failure counts):
+   ```bash
+   ccr stop
+   ccr start
+   ```
 
-### Model Switching Not Working
+### Network Issues
 
-1. Confirm model name format is correct: `provider_name,model_name`
-2. Check if provider configuration is correct
-3. Verify if the model is in the provider's support list
+1. **Test connectivity**:
+   ```bash
+   curl -I https://generativelanguage.googleapis.com
+   ```
 
-## 🤖 GitHub Actions
+2. **Test with proxy**:
+   ```bash
+   curl --proxy http://127.0.0.1:7890 -I https://generativelanguage.googleapis.com
+   ```
 
-Configure in `.github/workflows/claude.yaml`:
+3. **Check proxy configuration** in config.json
 
-```yaml
-name: Claude Code
+## 📄 License
 
-on:
-  issue_comment:
-    types: [created]
+MIT License - see [LICENSE](LICENSE) file for details.
 
-jobs:
-  claude:
-    if: contains(github.event.comment.body, '@claude')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-      issues: read
-      id-token: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+## 🤝 Contributing
 
-      - name: Prepare Environment
-        run: |
-          curl -fsSL https://bun.sh/install | bash
-          mkdir -p $HOME/.claude-code-router
-          cat << 'EOF' > $HOME/.claude-code-router/config.json
-          {
-            "log": true,
-            "OPENAI_API_KEY": "${{ secrets.OPENAI_API_KEY }}",
-            "OPENAI_BASE_URL": "https://api.deepseek.com",
-            "OPENAI_MODEL": "deepseek-chat"
-          }
-          EOF
+Contributions are welcome! Please feel free to submit issues and pull requests.
 
-      - name: Start Claude Code Router
-        run: |
-          nohup ~/.bun/bin/bunx @tellerlin/claude-code-router@latest start &
+### Development
 
-      - name: Run Claude Code
-        uses: anthropics/claude-code-action@beta
-        env:
-          ANTHROPIC_BASE_URL: http://localhost:3456
-        with:
-          anthropic_api_key: "any-string-is-ok"
+```bash
+# Clone the repository
+git clone https://github.com/tellerlin/claude-code-router.git
+cd claude-code-router
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Test locally
+node dist/cli.js --help
 ```
 
-## 📖 Further Reading
+## 🙏 Acknowledgments
 
-- **[Project Motivation and How It Works](blog/en/project-motivation-and-how-it-works.md)** - Project background and technical principles
-- **[Maybe We Can Do More with the Router](blog/en/maybe-we-can-do-more-with-the-route.md)** - Extended functionality discussion
+- [musistudio/claude-code-router](https://github.com/musistudio/claude-code-router) - Original project
+- [Anthropic](https://anthropic.com) - Claude Code
+- [@musistudio/llms](https://github.com/musistudio/llms) - LLM compatibility library
 
 
