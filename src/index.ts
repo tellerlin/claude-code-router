@@ -79,10 +79,18 @@ async function run(options: RunOptions = {}) {
   const servicePort = process.env.SERVICE_PORT
     ? parseInt(process.env.SERVICE_PORT)
     : port;
+  
+  // 让 @musistudio/llms 直接从 jsonPath 读取原始配置，但添加 providers 到 initialConfig
   const server = createServer({
     jsonPath: CONFIG_FILE,
     initialConfig: {
-      providers: processedConfig.providers,
+      providers: processedConfig.providers.map(p => ({
+        name: p.name,
+        api_base_url: p.api_base_url,
+        api_key: Array.isArray(p.api_keys) && p.api_keys.length > 0 ? p.api_keys[0] : '',
+        models: p.models,
+        transformer: p.transformer
+      })),
       HOST: HOST,
       PORT: servicePort,
       LOG_FILE: join(
@@ -108,4 +116,3 @@ async function run(options: RunOptions = {}) {
 }
 
 export { run };
-// run();

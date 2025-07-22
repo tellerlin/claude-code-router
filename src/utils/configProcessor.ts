@@ -47,7 +47,7 @@ export function processConfig(config: any): ProcessedConfig {
   };
 
   // 自动兼容 llms 代理机制
-  if (config.PROXY_URL && !process.env.HTTPS_PROXY && !process.env.https_proxy) {
+  if (config.PROXY_URL && !(process as any).env.HTTPS_PROXY && !(process as any).env.https_proxy) {
     if (config.PROXY_URL.startsWith('socks')) {
       console.warn('⚠️  WARNING: Main service does not support socks5 proxy!');
       console.warn('⚠️  Only test script (ccr test) supports socks5 proxy.');
@@ -58,7 +58,7 @@ export function processConfig(config: any): ProcessedConfig {
       console.warn('⚠️  2. Set up HTTP-to-socks5 forwarding (e.g., with Privoxy)');
       console.warn('⚠️  3. Use a VPN or direct connection for main service');
     } else {
-      process.env.HTTPS_PROXY = config.PROXY_URL;
+      (process as any).env.HTTPS_PROXY = config.PROXY_URL;
       console.log(`[INFO] Set HTTPS_PROXY for main service: ${config.PROXY_URL}`);
     }
   }
@@ -214,11 +214,4 @@ export function markApiKeySuccess(providerName: string, apiKey: string): void {
  */
 export function getApiKeyRotationStatus(): any[] {
   return apiKeyRotationTransformer.getAllProviderStatus();
-}
-
-/**
- * 重置指定提供商的所有API Key状态
- */
-export function resetProviderApiKeys(providerName: string): void {
-  apiKeyRotationTransformer.resetProvider(providerName);
 } 
