@@ -6,6 +6,9 @@ declare var process: any;
 
 import { apiKeyRotationTransformer, ApiKeyRotationConfig } from './apiKeyRotationTransformer';
 import { log } from './log';
+import { CONFIG_FILE } from '../constants';
+// @ts-ignore
+import { existsSync, readFileSync } from 'fs';
 
 export interface ProviderConfig {
   name: string;
@@ -213,5 +216,46 @@ export function markApiKeySuccess(providerName: string, apiKey: string): void {
  * 获取所有提供商的状态信息
  */
 export function getApiKeyRotationStatus(): any[] {
-  return apiKeyRotationTransformer.getAllProviderStatus();
+  // 首先尝试从运行时状态获取
+  const runtimeStatus = apiKeyRotationTransformer.getAllProviderStatus();
+  if (runtimeStatus.length > 0) {
+    return runtimeStatus;
+  }
+
+  // 如果运行时状态为空，从配置文件读取
+  try {
+    if (!existsSync(CONFIG_FILE)) {
+      return [];
+    }
+
+    const configContent = readFileSync(CONFIG_FILE, 'utf-8');
+    const config = JSON.parse(configContent);
+    const providers = config.Providers || config.providers || [];
+    
+    const configBasedStatus: any[] = [];
+    
+    for (const provider of providers) {
+      if (provider.enable_rotation && provider.api_keys && Array.isArray(provider.api_keys)) {
+        configBasedStatus.push({
+          provider: provider.name,
+          enabled: true,
+          strategy: provider.rotation_strategy || 'round_robin',
+          totalKeys: provider.api_keys.length,
+          availableKeys: provider.api_keys.length, // 假设所有 key 都可用
+          keyStatus: provider.api_keys.map((key: any) => ({
+            key: typeof key === 'string' ? key : key.key,
+            isActive: true,
+            failures: 0,
+            lastFailureTime: 0,
+            lastUsedTime: 0
+          }))
+        });
+      }
+    }
+    
+    return configBasedStatus;
+  } catch (error) {
+    console.error('Error reading config for rotation status:', error);
+    return [];
+  }
 } 

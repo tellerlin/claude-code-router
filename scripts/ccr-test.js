@@ -20665,13 +20665,20 @@ var require_undici = __commonJS({
 var import_fs = require("fs");
 var import_path = require("path");
 var import_os = require("os");
+function getKeyTail(apiKey) {
+  if (apiKey.length <= 8) return apiKey;
+  return `...${apiKey.slice(-6)}`;
+}
 async function testProviderModelKey(provider, model, apiKey) {
+  const keyTail = getKeyTail(apiKey);
   const result = {
     provider: provider.name,
     model,
-    apiKey: `${apiKey.substring(0, 8)}...`,
+    apiKey,
+    keyTail,
     success: false
   };
+  const startTime = Date.now();
   try {
     const url = `${provider.api_base_url}${model}:generateContent`;
     const fetchOptions = {
@@ -20689,14 +20696,20 @@ async function testProviderModelKey(provider, model, apiKey) {
       })
     };
     const res = await fetch(url, fetchOptions);
+    const responseTime = Date.now() - startTime;
+    result.responseTime = responseTime;
     if (res.ok) {
       result.success = true;
+      result.status = `${res.status} ${res.statusText}`;
     } else {
       const errorText = await res.text();
-      result.error = `HTTP ${res.status}: ${errorText.slice(0, 100)}...`;
+      result.status = `${res.status} ${res.statusText}`;
+      result.error = errorText.length > 100 ? `${errorText.slice(0, 100)}...` : errorText;
     }
   } catch (error) {
+    result.responseTime = Date.now() - startTime;
     result.error = error.message || "Unknown error";
+    result.status = "Network Error";
   }
   return result;
 }
@@ -20763,29 +20776,44 @@ async function main() {
     }
   }
   for (const provider of providers) {
+    console.log(`\u{1F4E1} Provider: ${provider.name}`);
     for (const model of provider.models) {
+      console.log(`  \u{1F50D} Model: ${model}`);
       for (const apiKey of provider.api_keys) {
         const result = await testProviderModelKey(provider, model, apiKey);
         results.push(result);
-        if (!result.success) {
-          console.log(`\u274C ${result.provider}/${result.model} (${result.apiKey}): ${result.error}`);
+        if (result.success) {
+          console.log(`    \u2705 Key ${result.keyTail}: ${result.status} (${result.responseTime}ms)`);
+        } else {
+          console.log(`    \u274C Key ${result.keyTail}: ${result.status}`);
+          if (result.error) {
+            console.log(`       Error: ${result.error}`);
+          }
         }
       }
     }
+    console.log();
   }
   const successCount = results.filter((r) => r.success).length;
   const failureCount = results.filter((r) => !r.success).length;
-  console.log("\n\u{1F4CA} Test Results:");
+  console.log("\u{1F4CA} Test Summary:");
   console.log(`   \u2705 Successful: ${successCount}/${totalTests}`);
   console.log(`   \u274C Failed: ${failureCount}/${totalTests}`);
-  if (failureCount > 0) {
-    console.log("\n\u{1F4A1} Tips:");
-    console.log("   \u2022 Check your API keys are valid");
-    console.log("   \u2022 Verify network connectivity");
-    console.log("   \u2022 Ensure proxy settings are correct");
+  const failedResults = results.filter((r) => !r.success);
+  if (failedResults.length > 0) {
+    console.log("\n\u{1F6A8} Failed API Keys:");
+    failedResults.forEach((result) => {
+      console.log(`   \u2022 ${result.provider}/${result.model} - Key ${result.keyTail}: ${result.status}`);
+    });
+    console.log("\n\u{1F4A1} Troubleshooting Tips:");
+    console.log("   \u2022 Check if API keys are valid and not expired");
+    console.log("   \u2022 Verify network connectivity and proxy settings");
+    console.log("   \u2022 Ensure API quota/rate limits are not exceeded");
+    console.log("   \u2022 Check if the provider service is available");
     process.exit(1);
   } else {
-    console.log("\n\u{1F389} All tests passed! Your API keys are working correctly.");
+    console.log("\n\u{1F389} All API keys are working correctly!");
+    console.log("   Your configuration is ready for production use.");
   }
 }
 main().catch(console.error);
