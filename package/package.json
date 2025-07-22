@@ -1,13 +1,13 @@
 {
   "name": "@tellerlin/claude-code-router",
-  "version": "1.0.45",
+  "version": "1.0.67",
   "description": "Use Claude Code without an Anthropics account and route it to another LLM provider",
   "bin": {
     "ccr": "dist/cli.js",
     "ccr-setup": "scripts/setup-config.js"
   },
   "scripts": {
-    "build": "esbuild src/cli.ts --bundle --platform=node --outfile=dist/cli.js && esbuild scripts/ccr-test.ts --bundle --platform=node --outfile=scripts/ccr-test.js && shx cp node_modules/tiktoken/tiktoken_bg.wasm dist/tiktoken_bg.wasm"
+    "build": "esbuild src/cli.ts --bundle --platform=node --outfile=dist/cli.js --external:./package.json && esbuild scripts/ccr-test.ts --bundle --platform=node --outfile=scripts/ccr-test.js --external:./package.json && shx cp node_modules/tiktoken/tiktoken_bg.wasm dist/tiktoken_bg.wasm"
   },
   "keywords": [
     "claude",
@@ -20,7 +20,6 @@
   "license": "MIT",
   "dependencies": {
     "@musistudio/llms": "^1.0.8",
-    "dotenv": "^16.4.7",
     "tiktoken": "^1.0.21",
     "uuid": "^11.1.0"
   },
@@ -28,7 +27,8 @@
     "esbuild": "^0.25.1",
     "fastify": "^5.4.0",
     "shx": "^0.4.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "@types/node": "^20.0.0"
   },
   "files": [
     "dist/",

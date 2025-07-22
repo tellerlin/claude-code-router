@@ -7,7 +7,6 @@ declare var process: any;
 import { apiKeyRotationTransformer, ApiKeyRotationConfig } from './apiKeyRotationTransformer';
 import { log } from './log';
 import { CONFIG_FILE } from '../constants';
-// @ts-ignore
 import { existsSync, readFileSync } from 'fs';
 
 export interface ProviderConfig {
