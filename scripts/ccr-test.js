@@ -940,14 +940,14 @@ var require_util = __commonJS({
         }
         const port = url.port != null ? url.port : url.protocol === "https:" ? 443 : 80;
         let origin = url.origin != null ? url.origin : `${url.protocol || ""}//${url.hostname || ""}:${port}`;
-        let path2 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
+        let path = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path2 && path2[0] !== "/") {
-          path2 = `/${path2}`;
+        if (path && path[0] !== "/") {
+          path = `/${path}`;
         }
-        return new URL(`${origin}${path2}`);
+        return new URL(`${origin}${path}`);
       }
       if (!isHttpOrHttpsPrefixed(url.origin || url.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -1495,9 +1495,9 @@ var require_diagnostics = __commonJS({
         "undici:client:sendHeaders",
         (evt) => {
           const {
-            request: { method, path: path2, origin }
+            request: { method, path, origin }
           } = evt;
-          debugLog("sending request to %s %s%s", method, origin, path2);
+          debugLog("sending request to %s %s%s", method, origin, path);
         }
       );
     }
@@ -1511,14 +1511,14 @@ var require_diagnostics = __commonJS({
         "undici:request:headers",
         (evt) => {
           const {
-            request: { method, path: path2, origin },
+            request: { method, path, origin },
             response: { statusCode }
           } = evt;
           debugLog(
             "received response to %s %s%s - HTTP %d",
             method,
             origin,
-            path2,
+            path,
             statusCode
           );
         }
@@ -1527,23 +1527,23 @@ var require_diagnostics = __commonJS({
         "undici:request:trailers",
         (evt) => {
           const {
-            request: { method, path: path2, origin }
+            request: { method, path, origin }
           } = evt;
-          debugLog("trailers received from %s %s%s", method, origin, path2);
+          debugLog("trailers received from %s %s%s", method, origin, path);
         }
       );
       diagnosticsChannel.subscribe(
         "undici:request:error",
         (evt) => {
           const {
-            request: { method, path: path2, origin },
+            request: { method, path, origin },
             error
           } = evt;
           debugLog(
             "request to %s %s%s errored - %s",
             method,
             origin,
-            path2,
+            path,
             error.message
           );
         }
@@ -1638,7 +1638,7 @@ var require_request = __commonJS({
     var kHandler = Symbol("handler");
     var Request = class {
       constructor(origin, {
-        path: path2,
+        path,
         method,
         body,
         headers,
@@ -1653,11 +1653,11 @@ var require_request = __commonJS({
         servername,
         throwOnError
       }, handler) {
-        if (typeof path2 !== "string") {
+        if (typeof path !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path2[0] !== "/" && !(path2.startsWith("http://") || path2.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path[0] !== "/" && !(path.startsWith("http://") || path.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path2)) {
+        } else if (invalidPathRegex.test(path)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -1722,7 +1722,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? serializePathWithQuery(path2, query) : path2;
+        this.path = query ? serializePathWithQuery(path, query) : path;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking ?? this.method !== "HEAD";
@@ -6499,7 +6499,7 @@ var require_client_h1 = __commonJS({
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
     function writeH1(client, request) {
-      const { method, path: path2, host, upgrade, blocking, reset } = request;
+      const { method, path, host, upgrade, blocking, reset } = request;
       let { body, headers, contentLength } = request;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util.isFormDataLike(body)) {
@@ -6565,7 +6565,7 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path2} HTTP/1.1\r
+      let header = `${method} ${path} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -7122,7 +7122,7 @@ var require_client_h2 = __commonJS({
     function writeH2(client, request) {
       const requestTimeout = request.bodyTimeout ?? client[kBodyTimeout];
       const session = client[kHTTP2Session];
-      const { method, path: path2, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
+      const { method, path, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
       let { body } = request;
       if (upgrade) {
         util.errorRequest(client, request, new Error("Upgrade not supported for H2"));
@@ -7193,7 +7193,7 @@ var require_client_h2 = __commonJS({
         stream.setTimeout(requestTimeout);
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path2;
+      headers[HTTP2_HEADER_PATH] = path;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -8656,7 +8656,7 @@ var require_proxy_agent = __commonJS({
         return this.#client.dispatch(opts, handler);
       }
     };
-    var ProxyAgent2 = class extends DispatcherBase {
+    var ProxyAgent = class extends DispatcherBase {
       constructor(opts) {
         if (!opts || typeof opts === "object" && !(opts instanceof URL2) && !opts.uri) {
           throw new InvalidArgumentError("Proxy uri is mandatory");
@@ -8805,7 +8805,7 @@ var require_proxy_agent = __commonJS({
         throw new InvalidArgumentError("Proxy-Authorization should be sent in ProxyAgent constructor");
       }
     }
-    module2.exports = ProxyAgent2;
+    module2.exports = ProxyAgent;
   }
 });
 
@@ -8815,7 +8815,7 @@ var require_env_http_proxy_agent = __commonJS({
     "use strict";
     var DispatcherBase = require_dispatcher_base();
     var { kClose, kDestroy, kClosed, kDestroyed, kDispatch, kNoProxyAgent, kHttpProxyAgent, kHttpsProxyAgent } = require_symbols();
-    var ProxyAgent2 = require_proxy_agent();
+    var ProxyAgent = require_proxy_agent();
     var Agent = require_agent();
     var DEFAULT_PORTS = {
       "http:": 80,
@@ -8832,13 +8832,13 @@ var require_env_http_proxy_agent = __commonJS({
         this[kNoProxyAgent] = new Agent(agentOpts);
         const HTTP_PROXY = httpProxy ?? process.env.http_proxy ?? process.env.HTTP_PROXY;
         if (HTTP_PROXY) {
-          this[kHttpProxyAgent] = new ProxyAgent2({ ...agentOpts, uri: HTTP_PROXY });
+          this[kHttpProxyAgent] = new ProxyAgent({ ...agentOpts, uri: HTTP_PROXY });
         } else {
           this[kHttpProxyAgent] = this[kNoProxyAgent];
         }
         const HTTPS_PROXY = httpsProxy ?? process.env.https_proxy ?? process.env.HTTPS_PROXY;
         if (HTTPS_PROXY) {
-          this[kHttpsProxyAgent] = new ProxyAgent2({ ...agentOpts, uri: HTTPS_PROXY });
+          this[kHttpsProxyAgent] = new ProxyAgent({ ...agentOpts, uri: HTTPS_PROXY });
         } else {
           this[kHttpsProxyAgent] = this[kHttpProxyAgent];
         }
@@ -10720,20 +10720,20 @@ var require_mock_utils = __commonJS({
       }
       return normalizedQp;
     }
-    function safeUrl(path2) {
-      if (typeof path2 !== "string") {
-        return path2;
+    function safeUrl(path) {
+      if (typeof path !== "string") {
+        return path;
       }
-      const pathSegments = path2.split("?", 3);
+      const pathSegments = path.split("?", 3);
       if (pathSegments.length !== 2) {
-        return path2;
+        return path;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path2, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path2);
+    function matchKey(mockDispatch2, { path, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -10758,8 +10758,8 @@ var require_mock_utils = __commonJS({
       const basePath = key.query ? serializePathWithQuery(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
       const resolvedPathWithoutTrailingSlash = removeTrailingSlash(resolvedPath);
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path2, ignoreTrailingSlash }) => {
-        return ignoreTrailingSlash ? matchValue(removeTrailingSlash(safeUrl(path2)), resolvedPathWithoutTrailingSlash) : matchValue(safeUrl(path2), resolvedPath);
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path, ignoreTrailingSlash }) => {
+        return ignoreTrailingSlash ? matchValue(removeTrailingSlash(safeUrl(path)), resolvedPathWithoutTrailingSlash) : matchValue(safeUrl(path), resolvedPath);
       });
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
@@ -10797,19 +10797,19 @@ var require_mock_utils = __commonJS({
         mockDispatches.splice(index, 1);
       }
     }
-    function removeTrailingSlash(path2) {
-      while (path2.endsWith("/")) {
-        path2 = path2.slice(0, -1);
+    function removeTrailingSlash(path) {
+      while (path.endsWith("/")) {
+        path = path.slice(0, -1);
       }
-      if (path2.length === 0) {
-        path2 = "/";
+      if (path.length === 0) {
+        path = "/";
       }
-      return path2;
+      return path;
     }
     function buildKey(opts) {
-      const { path: path2, method, body, headers, query } = opts;
+      const { path, method, body, headers, query } = opts;
       return {
-        path: path2,
+        path,
         method,
         body,
         headers,
@@ -11466,10 +11466,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path2, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path2,
+            Path: path,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -11546,9 +11546,9 @@ var require_mock_agent = __commonJS({
         const acceptNonStandardSearchParameters = this[kMockAgentAcceptsNonStandardSearchParameters];
         const dispatchOpts = { ...opts };
         if (acceptNonStandardSearchParameters && dispatchOpts.path) {
-          const [path2, searchParams] = dispatchOpts.path.split("?");
+          const [path, searchParams] = dispatchOpts.path.split("?");
           const normalizedSearchParams = normalizeSearchParams(searchParams, acceptNonStandardSearchParameters);
-          dispatchOpts.path = `${path2}?${normalizedSearchParams}`;
+          dispatchOpts.path = `${path}?${normalizedSearchParams}`;
         }
         return this[kAgent].dispatch(dispatchOpts, handler);
       }
@@ -11670,9 +11670,9 @@ var require_global2 = __commonJS({
     var { InvalidArgumentError } = require_errors();
     var Agent = require_agent();
     if (getGlobalDispatcher() === void 0) {
-      setGlobalDispatcher2(new Agent());
+      setGlobalDispatcher(new Agent());
     }
-    function setGlobalDispatcher2(agent) {
+    function setGlobalDispatcher(agent) {
       if (!agent || typeof agent.dispatch !== "function") {
         throw new InvalidArgumentError("Argument agent must implement Agent");
       }
@@ -11687,7 +11687,7 @@ var require_global2 = __commonJS({
       return globalThis[globalDispatcher];
     }
     module2.exports = {
-      setGlobalDispatcher: setGlobalDispatcher2,
+      setGlobalDispatcher,
       getGlobalDispatcher
     };
   }
@@ -11842,9 +11842,9 @@ var require_redirect_handler = __commonJS({
           return;
         }
         const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path2 = search ? `${pathname}${search}` : pathname;
+        const path = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path2;
+        this.opts.path = path;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -17528,9 +17528,9 @@ var require_util4 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path2) {
-      for (let i = 0; i < path2.length; ++i) {
-        const code = path2.charCodeAt(i);
+    function validateCookiePath(path) {
+      for (let i = 0; i < path.length; ++i) {
+        const code = path.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code === 127 || // DEL
         code === 59) {
@@ -20504,7 +20504,7 @@ var require_undici = __commonJS({
     var Pool = require_pool();
     var BalancedPool = require_balanced_pool();
     var Agent = require_agent();
-    var ProxyAgent2 = require_proxy_agent();
+    var ProxyAgent = require_proxy_agent();
     var EnvHttpProxyAgent = require_env_http_proxy_agent();
     var RetryAgent = require_retry_agent();
     var H2CClient = require_h2c_client();
@@ -20519,7 +20519,7 @@ var require_undici = __commonJS({
     var MockPool = require_mock_pool();
     var mockErrors = require_mock_errors();
     var RetryHandler = require_retry_handler();
-    var { getGlobalDispatcher, setGlobalDispatcher: setGlobalDispatcher2 } = require_global2();
+    var { getGlobalDispatcher, setGlobalDispatcher } = require_global2();
     var DecoratorHandler = require_decorator_handler();
     var RedirectHandler = require_redirect_handler();
     Object.assign(Dispatcher.prototype, api);
@@ -20528,7 +20528,7 @@ var require_undici = __commonJS({
     module2.exports.Pool = Pool;
     module2.exports.BalancedPool = BalancedPool;
     module2.exports.Agent = Agent;
-    module2.exports.ProxyAgent = ProxyAgent2;
+    module2.exports.ProxyAgent = ProxyAgent;
     module2.exports.EnvHttpProxyAgent = EnvHttpProxyAgent;
     module2.exports.RetryAgent = RetryAgent;
     module2.exports.H2CClient = H2CClient;
@@ -20570,11 +20570,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path2 = opts.path;
+          let path = opts.path;
           if (!opts.path.startsWith("/")) {
-            path2 = `/${path2}`;
+            path = `/${path}`;
           }
-          url = new URL(util.parseOrigin(url).origin + path2);
+          url = new URL(util.parseOrigin(url).origin + path);
         } else {
           if (!opts) {
             opts = typeof url === "object" ? url : {};
@@ -20593,7 +20593,7 @@ var require_undici = __commonJS({
         }, handler);
       };
     }
-    module2.exports.setGlobalDispatcher = setGlobalDispatcher2;
+    module2.exports.setGlobalDispatcher = setGlobalDispatcher;
     module2.exports.getGlobalDispatcher = getGlobalDispatcher;
     var fetchImpl = require_fetch().fetch;
     module2.exports.fetch = async function fetch2(init, options = void 0) {
@@ -20662,182 +20662,133 @@ var require_undici = __commonJS({
 });
 
 // scripts/ccr-test.ts
-var fs = __toESM(require("fs"));
-var path = __toESM(require("path"));
-var import_process = __toESM(require("process"));
-var CONFIG_PATH = path.join(require("os").homedir(), ".claude-code-router", "config.json");
-function loadConfig() {
-  console.log(`[DEBUG] Loading config from: ${CONFIG_PATH}`);
-  if (!fs.existsSync(CONFIG_PATH)) {
-    console.error(`Config file not found: ${CONFIG_PATH}`);
-    import_process.default.exit(1);
-  }
-  const configContent = fs.readFileSync(CONFIG_PATH, "utf-8");
-  console.log(`[DEBUG] Config file size: ${configContent.length} bytes`);
-  const config = JSON.parse(configContent);
-  console.log(`[DEBUG] Config loaded successfully. PROXY_URL in config: ${config.PROXY_URL || "NOT_SET"}`);
-  return config;
-}
-function getApiKeys(provider) {
-  if (provider.api_keys) {
-    return provider.api_keys.map((k) => typeof k === "string" ? k : k.key);
-  }
-  if (provider.api_key) {
-    return [provider.api_key];
-  }
-  return [];
-}
-function getTestEndpoint(provider, model) {
-  if (provider.api_base_url.includes("openai") || provider.api_base_url.includes("deepseek") || provider.api_base_url.includes("openrouter")) {
-    return {
-      url: provider.api_base_url.replace(/\/$/, "") + "/chat/completions",
-      method: "POST",
-      body: JSON.stringify({ model, messages: [{ role: "user", content: "ping" }] }),
-      headers: { "Content-Type": "application/json" }
-    };
-  } else if (provider.api_base_url.includes("generativelanguage.googleapis.com")) {
-    return {
-      url: provider.api_base_url.replace(/\/$/, "") + `/${model}:generateContent`,
-      method: "POST",
-      body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] }),
-      headers: { "Content-Type": "application/json" }
-    };
-  } else {
-    return {
-      url: provider.api_base_url.replace(/\/$/, "") + "/v1/models",
-      method: "GET",
-      headers: {}
-    };
-  }
-}
+var import_fs = require("fs");
+var import_path = require("path");
+var import_os = require("os");
 async function testProviderModelKey(provider, model, apiKey) {
-  const { url, method, body, headers } = getTestEndpoint(provider, model);
-  if (provider.api_base_url.includes("openai") || provider.api_base_url.includes("deepseek") || provider.api_base_url.includes("openrouter")) {
-    headers["Authorization"] = `Bearer ${apiKey}`;
-  } else if (provider.api_base_url.includes("generativelanguage.googleapis.com")) {
-    headers["x-goog-api-key"] = apiKey;
-  } else {
-    headers["Authorization"] = `Bearer ${apiKey}`;
-  }
-  console.log(`[DEBUG] Testing ${provider.name}/${model} with key ${apiKey.slice(0, 8)}...`);
-  console.log(`[DEBUG] Request URL: ${url}`);
-  console.log(`[DEBUG] Request method: ${method}`);
-  console.log(`[DEBUG] Request headers: ${JSON.stringify(headers)}`);
-  console.log(`[DEBUG] Request body: ${body || "NO_BODY"}`);
-  console.log(`[DEBUG] Proxy method: ${import_process.default.env.PROXY_URL ? "undici-ProxyAgent" : "direct"}`);
-  console.log(`[DEBUG] Proxy URL: ${import_process.default.env.PROXY_URL || "NONE"}`);
-  const start = Date.now();
+  const result = {
+    provider: provider.name,
+    model,
+    apiKey: `${apiKey.substring(0, 8)}...`,
+    success: false
+  };
   try {
-    const fetchOptions = { method, headers };
-    if (body) fetchOptions.body = body;
-    console.log(`[DEBUG] Final fetch options: ${JSON.stringify(fetchOptions, null, 2)}`);
-    console.log(`[DEBUG] Making fetch request with undici proxy support...`);
+    const url = `${provider.api_base_url}${model}:generateContent`;
+    const fetchOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: "Hello" }]
+          }
+        ]
+      })
+    };
     const res = await fetch(url, fetchOptions);
-    const text = await res.text();
-    let json = null;
-    try {
-      json = JSON.parse(text);
-    } catch {
-    }
     if (res.ok) {
-      console.log(`[SUCCESS] Provider: ${provider.name} | Model: ${model} | Key: ${apiKey.slice(0, 8)}... | ${res.status} ${res.statusText} (${Date.now() - start}ms)`);
+      result.success = true;
     } else {
-      console.error(`[FAIL] Provider: ${provider.name} | Model: ${model} | Key: ${apiKey.slice(0, 8)}... | ${res.status} ${res.statusText}`);
-      console.error(`  URL: ${url}`);
-      console.error(`  Request: ${body || ""}`);
-      console.error(`  Response: ${text}`);
+      const errorText = await res.text();
+      result.error = `HTTP ${res.status}: ${errorText.slice(0, 100)}...`;
     }
-    return { ok: res.ok, status: res.status, statusText: res.statusText, json, text };
-  } catch (err) {
-    console.error(`[ERROR] Provider: ${provider.name} | Model: ${model} | Key: ${apiKey.slice(0, 8)}...`);
-    console.error(`  URL: ${url}`);
-    console.error(`  Request: ${body || ""}`);
-    console.error(`  Error name: ${err.name}`);
-    console.error(`  Error message: ${err.message}`);
-    console.error(`  Error code: ${err.code || "NO_CODE"}`);
-    console.error(`  Error cause: ${err.cause || "NO_CAUSE"}`);
-    console.error(`  Full error: ${err.stack || err}`);
-    return { ok: false, error: err };
+  } catch (error) {
+    result.error = error.message || "Unknown error";
   }
-}
-var setGlobalDispatcher = null;
-var ProxyAgent = null;
-async function initializeProxySupport() {
-  try {
-    const undici = await Promise.resolve().then(() => __toESM(require_undici()));
-    setGlobalDispatcher = undici.setGlobalDispatcher;
-    ProxyAgent = undici.ProxyAgent;
-    console.log(`[DEBUG] undici imported successfully for proxy support`);
-    return true;
-  } catch (undiciError) {
-    console.log(`[DEBUG] undici not available: ${undiciError.message}`);
-    return false;
-  }
+  return result;
 }
 async function main() {
-  const config = loadConfig();
-  if (config.PROXY_URL && !import_process.default.env.PROXY_URL) {
-    import_process.default.env.PROXY_URL = config.PROXY_URL;
-    console.log(`[INFO] Set PROXY_URL from config: ${config.PROXY_URL}`);
+  const configPath = (0, import_path.join)((0, import_os.homedir)(), ".claude-code-router", "config.json");
+  if (!(0, import_fs.existsSync)(configPath)) {
+    console.error("\u274C Config file not found:", configPath);
+    process.exit(1);
   }
-  console.log(`[DEBUG] === Claude Code Router Test Script Debug Mode ===`);
-  console.log(`[DEBUG] Node.js version: ${import_process.default.version}`);
-  console.log(`[DEBUG] Platform: ${import_process.default.platform}`);
-  console.log(`[DEBUG] Architecture: ${import_process.default.arch}`);
-  console.log(`[DEBUG] Environment variables after processing:`);
-  console.log(`[DEBUG] process.env.PROXY_URL = ${import_process.default.env.PROXY_URL || "NOT_SET"}`);
-  console.log(`[DEBUG] Found ${config.Providers?.length || 0} providers`);
-  if (import_process.default.env.PROXY_URL) {
-    console.log(`[DEBUG] Proxy URL detected: ${import_process.default.env.PROXY_URL}`);
-    if (import_process.default.env.PROXY_URL.startsWith("socks")) {
-      console.error(`[ERROR] socks5 proxy not supported in test script!`);
-      console.error(`[ERROR] Please use HTTP proxy instead of: ${import_process.default.env.PROXY_URL}`);
-      console.error(`[ERROR] Example: http://proxy.example.com:8080`);
-      console.error(`[ERROR] Or remove PROXY_URL to test without proxy`);
-      import_process.default.exit(1);
+  let config;
+  try {
+    const configContent = (0, import_fs.readFileSync)(configPath, "utf-8");
+    config = JSON.parse(configContent);
+  } catch (error) {
+    console.error("\u274C Failed to load config:", error);
+    process.exit(1);
+  }
+  if (config && config.PROXY_URL && !process.env.PROXY_URL) {
+    process.env.PROXY_URL = config.PROXY_URL;
+  }
+  if (process.env.PROXY_URL) {
+    if (process.env.PROXY_URL.startsWith("socks")) {
+      console.error("\u274C socks5 proxy not supported in test script!");
+      console.error("   Please use HTTP proxy instead");
+      process.exit(1);
     } else {
-      console.log(`[DEBUG] Using HTTP proxy with undici ProxyAgent...`);
+      let setGlobalDispatcher = null;
+      let ProxyAgent = null;
+      async function initializeProxySupport() {
+        try {
+          const undici = await Promise.resolve().then(() => __toESM(require_undici()));
+          setGlobalDispatcher = undici.setGlobalDispatcher;
+          ProxyAgent = undici.ProxyAgent;
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
       const proxyInitialized = await initializeProxySupport();
       if (proxyInitialized && setGlobalDispatcher && ProxyAgent) {
         try {
-          const proxyAgent = new ProxyAgent(import_process.default.env.PROXY_URL);
+          const proxyAgent = new ProxyAgent(process.env.PROXY_URL);
           setGlobalDispatcher(proxyAgent);
-          console.log(`[INFO] undici ProxyAgent enabled, proxy: ${import_process.default.env.PROXY_URL}`);
-          console.log(`[DEBUG] HTTP proxy setup completed with undici`);
         } catch (proxyError) {
-          console.error(`[ERROR] Failed to setup undici ProxyAgent: ${proxyError.message}`);
-          import_process.default.exit(1);
+          console.error("\u274C Failed to setup proxy:", proxyError.message);
+          process.exit(1);
         }
-      } else {
-        console.error(`[ERROR] undici ProxyAgent not available, cannot setup proxy`);
-        console.error(`[ERROR] Node.js version: ${import_process.default.version}`);
-        import_process.default.exit(1);
       }
     }
-  } else {
-    console.log(`[DEBUG] No proxy configured`);
   }
-  for (const provider of config.Providers || config.providers || []) {
-    console.log(`[DEBUG] Processing provider: ${provider.name}`);
-    const apiKeys = getApiKeys(provider);
-    console.log(`[DEBUG] Provider ${provider.name} has ${apiKeys.length} API keys`);
-    if (!apiKeys.length) {
-      console.warn(`Provider ${provider.name} has no API keys, skipped.`);
-      continue;
-    }
+  const providers = config && config.Providers ? config.Providers : [];
+  if (providers.length === 0) {
+    console.error("\u274C No providers configured");
+    process.exit(1);
+  }
+  console.log("\u{1F9EA} Testing API keys...\n");
+  const results = [];
+  let totalTests = 0;
+  for (const provider of providers) {
     for (const model of provider.models) {
-      console.log(`[DEBUG] Testing model: ${model}`);
-      for (const apiKey of apiKeys) {
-        const result = await testProviderModelKey(provider, model, apiKey);
-        if (result.ok) break;
+      for (const apiKey of provider.api_keys) {
+        totalTests++;
       }
     }
+  }
+  for (const provider of providers) {
+    for (const model of provider.models) {
+      for (const apiKey of provider.api_keys) {
+        const result = await testProviderModelKey(provider, model, apiKey);
+        results.push(result);
+        if (!result.success) {
+          console.log(`\u274C ${result.provider}/${result.model} (${result.apiKey}): ${result.error}`);
+        }
+      }
+    }
+  }
+  const successCount = results.filter((r) => r.success).length;
+  const failureCount = results.filter((r) => !r.success).length;
+  console.log("\n\u{1F4CA} Test Results:");
+  console.log(`   \u2705 Successful: ${successCount}/${totalTests}`);
+  console.log(`   \u274C Failed: ${failureCount}/${totalTests}`);
+  if (failureCount > 0) {
+    console.log("\n\u{1F4A1} Tips:");
+    console.log("   \u2022 Check your API keys are valid");
+    console.log("   \u2022 Verify network connectivity");
+    console.log("   \u2022 Ensure proxy settings are correct");
+    process.exit(1);
+  } else {
+    console.log("\n\u{1F389} All tests passed! Your API keys are working correctly.");
   }
 }
-main().catch((e) => {
-  console.error("Fatal error:", e);
-  import_process.default.exit(1);
-});
+main().catch(console.error);
 /*! Bundled license information:
 
 undici/lib/web/fetch/body.js:

@@ -23,8 +23,19 @@ interface TestResult {
   provider: string;
   model: string;
   apiKey: string;
+  keyTail: string;
   success: boolean;
+  status?: string;
+  responseTime?: number;
   error?: string;
+}
+
+/**
+ * 获取 API key 尾号
+ */
+function getKeyTail(apiKey: string): string {
+  if (apiKey.length <= 8) return apiKey;
+  return `...${apiKey.slice(-6)}`;
 }
 
 /**
@@ -35,13 +46,17 @@ async function testProviderModelKey(
   model: string,
   apiKey: string
 ): Promise<TestResult> {
+  const keyTail = getKeyTail(apiKey);
   const result: TestResult = {
     provider: provider.name,
     model: model,
-    apiKey: `${apiKey.substring(0, 8)}...`,
+    apiKey: apiKey,
+    keyTail: keyTail,
     success: false
   };
 
+  const startTime = Date.now();
+  
   try {
     const url = `${provider.api_base_url}${model}:generateContent`;
 
@@ -61,15 +76,21 @@ async function testProviderModelKey(
     };
 
     const res = await fetch(url, fetchOptions);
+    const responseTime = Date.now() - startTime;
+    result.responseTime = responseTime;
 
     if (res.ok) {
       result.success = true;
+      result.status = `${res.status} ${res.statusText}`;
     } else {
       const errorText = await res.text();
-      result.error = `HTTP ${res.status}: ${errorText.slice(0, 100)}...`;
+      result.status = `${res.status} ${res.statusText}`;
+      result.error = errorText.length > 100 ? `${errorText.slice(0, 100)}...` : errorText;
     }
   } catch (error: any) {
+    result.responseTime = Date.now() - startTime;
     result.error = error.message || 'Unknown error';
+    result.status = 'Network Error';
   }
 
   return result;
@@ -156,35 +177,54 @@ async function main() {
 
   // 执行测试
   for (const provider of providers) {
+    console.log(`📡 Provider: ${provider.name}`);
+    
     for (const model of provider.models) {
+      console.log(`  🔍 Model: ${model}`);
+      
       for (const apiKey of provider.api_keys) {
         const result = await testProviderModelKey(provider, model, apiKey);
         results.push(result);
         
-        // 只显示失败的测试
-        if (!result.success) {
-          console.log(`❌ ${result.provider}/${result.model} (${result.apiKey}): ${result.error}`);
+        // 显示每个测试的详细状态
+        if (result.success) {
+          console.log(`    ✅ Key ${result.keyTail}: ${result.status} (${result.responseTime}ms)`);
+        } else {
+          console.log(`    ❌ Key ${result.keyTail}: ${result.status}`);
+          if (result.error) {
+            console.log(`       Error: ${result.error}`);
+          }
         }
       }
     }
+    console.log(); // 空行分隔不同 provider
   }
 
   // 统计结果
   const successCount = results.filter(r => r.success).length;
   const failureCount = results.filter(r => !r.success).length;
 
-  console.log('\n📊 Test Results:');
+  console.log('📊 Test Summary:');
   console.log(`   ✅ Successful: ${successCount}/${totalTests}`);
   console.log(`   ❌ Failed: ${failureCount}/${totalTests}`);
 
-  if (failureCount > 0) {
-    console.log('\n💡 Tips:');
-    console.log('   • Check your API keys are valid');
-    console.log('   • Verify network connectivity');
-    console.log('   • Ensure proxy settings are correct');
+  // 显示失败的 key 详情
+  const failedResults = results.filter(r => !r.success);
+  if (failedResults.length > 0) {
+    console.log('\n🚨 Failed API Keys:');
+    failedResults.forEach(result => {
+      console.log(`   • ${result.provider}/${result.model} - Key ${result.keyTail}: ${result.status}`);
+    });
+    
+    console.log('\n💡 Troubleshooting Tips:');
+    console.log('   • Check if API keys are valid and not expired');
+    console.log('   • Verify network connectivity and proxy settings');
+    console.log('   • Ensure API quota/rate limits are not exceeded');
+    console.log('   • Check if the provider service is available');
     process.exit(1);
   } else {
-    console.log('\n🎉 All tests passed! Your API keys are working correctly.');
+    console.log('\n🎉 All API keys are working correctly!');
+    console.log('   Your configuration is ready for production use.');
   }
 }
 

@@ -116,8 +116,8 @@ async function run(options: RunOptions = {}) {
     await server.start();
     console.log(`🚀 Claude Code Router service started successfully on ${HOST}:${servicePort}`);
     
-    // 服务启动成功后，退出主进程，让服务在后台运行
-    process.exit(0);
+    // 服务启动成功，保持运行状态
+    // 移除 process.exit(0) 让服务持续运行
   } catch (error) {
     console.error("Failed to start service:", error);
     cleanupPidFile();
