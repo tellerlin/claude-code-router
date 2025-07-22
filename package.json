@@ -1,6 +1,6 @@
 {
   "name": "@tellerlin/claude-code-router",
-  "version": "1.0.66",
+  "version": "1.0.67",
   "description": "Use Claude Code without an Anthropics account and route it to another LLM provider",
   "bin": {
     "ccr": "dist/cli.js",
