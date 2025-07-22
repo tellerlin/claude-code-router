@@ -93,7 +93,7 @@ export class ApiKeyRotationTransformer {
   }
 
   /**
-   * 处理请求，自动轮询API Key
+   * Process request with enhanced retry logic
    */
   async processRequest(
     providerName: string, 
@@ -102,45 +102,75 @@ export class ApiKeyRotationTransformer {
   ): Promise<any> {
     const config = this.config.get(providerName);
     if (!config || !config.enable_rotation) {
-      // 如果没有配置轮询，使用默认的api_key
       return requestFn(request.api_key);
     }
 
     const maxRetries = config.max_retries || 3;
     let lastError: any;
-
+    let usedKeys = new Set<string>();
+    
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       const apiKey = this.getApiKey(providerName);
       if (!apiKey) {
         throw new Error(`No available API keys for provider: ${providerName}`);
       }
 
+      // Skip if we've already tried this key in this request
+      if (usedKeys.has(apiKey)) {
+        // If we've tried all available keys, wait longer before retrying
+        if (usedKeys.size >= this.rotators.get(providerName)?.getAvailableKeyCount() || 0) {
+          await this.delay(2000 * (attempt + 1));
+        }
+        continue;
+      }
+      
+      usedKeys.add(apiKey);
+
       try {
-        // 更新请求中的API Key
         const requestWithKey = {
           ...request,
           api_key: apiKey
         };
 
         const response = await requestFn(requestWithKey);
-        
-        // 标记成功
         this.markSuccess(providerName, apiKey);
-        
         return response;
       } catch (error: any) {
         lastError = error;
         
-        // 标记失败
+        // Get rotator instance
+        const rotator = this.rotators.get(providerName);
+        if (!rotator) {
+          throw error;
+        }
+
+        // Mark failure and analyze error
         this.markFailure(providerName, apiKey, error);
+        const status = rotator.getKeyStatus(apiKey);
         
-        // 检查是否应该重试
+        if (!status) {
+          throw error;
+        }
+
+        // Handle different error types
+        const errorType = status.errorHistory[0]?.type;
+        
+        if (errorType === 'auth') {
+          // Don't retry auth failures, move to next key immediately
+          continue;
+        }
+        
+        if (errorType === 'quota') {
+          // For quota errors, try next key immediately
+          continue;
+        }
+        
+        // For other errors, use exponential backoff
         if (!config.retry_on_failure || attempt === maxRetries - 1) {
           break;
         }
         
-        // 等待一段时间后重试
-        await this.delay(1000 * (attempt + 1));
+        await this.delay(1000 * Math.pow(2, attempt));
       }
     }
 

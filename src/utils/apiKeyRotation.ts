@@ -16,6 +16,16 @@ export interface ApiKeyStatus {
   lastFailureTime: number;
   isActive: boolean;
   lastUsedTime: number;
+  // Add new fields for better error tracking
+  quotaFailures: number;
+  authFailures: number;
+  lastQuotaResetTime: number;
+  permanentlyDisabled: boolean;
+  errorHistory: Array<{
+    time: number;
+    error: any;
+    type: 'quota' | 'auth' | 'other';
+  }>;
 }
 
 export type RotationStrategy = 'round_robin' | 'random' | 'weighted' | 'least_used';
@@ -25,20 +35,26 @@ export class ApiKeyRotator {
   private status: Map<string, ApiKeyStatus>;
   private currentIndex: number = 0;
   private strategy: RotationStrategy;
+  private readonly MAX_ERROR_HISTORY = 10;
 
   constructor(apiKeys: string[] | ApiKeyConfig[], strategy: RotationStrategy = 'round_robin') {
     this.apiKeys = this.normalizeApiKeys(apiKeys);
     this.strategy = strategy;
     this.status = new Map();
     
-    // 初始化状态
+    // Initialize status with enhanced fields
     this.apiKeys.forEach(config => {
       this.status.set(config.key, {
         key: config.key,
         failures: 0,
         lastFailureTime: 0,
         isActive: true,
-        lastUsedTime: 0
+        lastUsedTime: 0,
+        quotaFailures: 0,
+        authFailures: 0,
+        lastQuotaResetTime: 0,
+        permanentlyDisabled: false,
+        errorHistory: []
       });
     });
   }
@@ -91,23 +107,48 @@ export class ApiKeyRotator {
   }
 
   /**
-   * 获取所有可用的API Key
+   * Analyze error type
+   */
+  private analyzeError(error: any): 'quota' | 'auth' | 'other' {
+    const errorMessage = error?.message?.toLowerCase() || '';
+    if (errorMessage.includes('quota') || errorMessage.includes('rate limit')) {
+      return 'quota';
+    }
+    if (errorMessage.includes('unauthorized') || errorMessage.includes('invalid key') || errorMessage.includes('authentication')) {
+      return 'auth';
+    }
+    return 'other';
+  }
+
+  /**
+   * Enhanced getAvailableKeys with smarter filtering
    */
   private getAvailableKeys(): string[] {
     const now = Date.now();
     return this.apiKeys
       .filter(config => {
         const status = this.status.get(config.key);
-        if (!status || !status.isActive) return false;
+        if (!status || status.permanentlyDisabled) return false;
         
-        // 检查冷却时间
+        // Skip permanently disabled keys
+        if (status.permanentlyDisabled) return false;
+        
+        // Check quota reset time
+        if (status.lastQuotaResetTime > now) return false;
+        
+        // Skip keys with recent quota failures
+        if (status.quotaFailures > 0) {
+          const quotaResetWindow = 60000; // 1 minute
+          if (now - status.lastFailureTime < quotaResetWindow) return false;
+          // Reset quota failures counter after window
+          status.quotaFailures = 0;
+        }
+        
+        // Check cooldown time
         if (config.cooldownTime && status.lastFailureTime > 0) {
           const timeSinceFailure = now - status.lastFailureTime;
           if (timeSinceFailure < config.cooldownTime) return false;
         }
-        
-        // 检查最大失败次数
-        if (config.maxFailures && status.failures >= config.maxFailures) return false;
         
         return true;
       })
@@ -186,19 +227,47 @@ export class ApiKeyRotator {
   }
 
   /**
-   * 标记API Key失败
+   * Mark API Key failure with enhanced error tracking
    */
   markFailure(key: string, error?: any): void {
     const status = this.status.get(key);
     if (!status) return;
     
+    const errorType = this.analyzeError(error);
+    
+    // Update error history
+    status.errorHistory.unshift({
+      time: Date.now(),
+      error,
+      type: errorType
+    });
+    
+    // Keep only recent errors
+    status.errorHistory = status.errorHistory.slice(0, this.MAX_ERROR_HISTORY);
+    
+    // Update failure counters
     status.failures++;
     status.lastFailureTime = Date.now();
     
-    // 检查是否超过最大失败次数
+    if (errorType === 'quota') {
+      status.quotaFailures++;
+    } else if (errorType === 'auth') {
+      status.authFailures++;
+    }
+    
+    // Check for permanent disabling conditions
     const config = this.apiKeys.find(c => c.key === key);
-    if (config?.maxFailures && status.failures >= config.maxFailures) {
+    
+    // Permanently disable on authentication failures or excessive failures
+    if (errorType === 'auth' || 
+        (config?.maxFailures && status.failures >= config.maxFailures * 2)) {
+      status.permanentlyDisabled = true;
       status.isActive = false;
+    }
+    // Temporary disable on quota exceeded
+    else if (errorType === 'quota') {
+      status.isActive = false;
+      status.lastQuotaResetTime = Date.now() + (config?.cooldownTime || 60000);
     }
   }
 
@@ -216,22 +285,25 @@ export class ApiKeyRotator {
   }
 
   /**
-   * 重置API Key状态
+   * Reset a permanently disabled key (for manual intervention)
    */
   resetKey(key: string): void {
     const status = this.status.get(key);
     if (status) {
-      status.failures = 0;
-      status.lastFailureTime = 0;
+      status.permanentlyDisabled = false;
       status.isActive = true;
+      status.failures = 0;
+      status.quotaFailures = 0;
+      status.authFailures = 0;
+      status.errorHistory = [];
     }
   }
 
   /**
-   * 获取API Key状态
+   * Get key status information
    */
-  getKeyStatus(key: string): ApiKeyStatus | undefined {
-    return this.status.get(key);
+  getKeyStatus(key: string): ApiKeyStatus | null {
+    return this.status.get(key) || null;
   }
 
   /**
@@ -245,6 +317,13 @@ export class ApiKeyRotator {
    * 获取可用API Key数量
    */
   getAvailableCount(): number {
+    return this.getAvailableKeys().length;
+  }
+
+  /**
+   * Get count of available keys
+   */
+  getAvailableKeyCount(): number {
     return this.getAvailableKeys().length;
   }
 
@@ -274,7 +353,12 @@ export class ApiKeyRotator {
       failures: 0,
       lastFailureTime: 0,
       isActive: true,
-      lastUsedTime: 0
+      lastUsedTime: 0,
+      quotaFailures: 0,
+      authFailures: 0,
+      lastQuotaResetTime: 0,
+      permanentlyDisabled: false,
+      errorHistory: []
     });
   }
 
