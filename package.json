@@ -3,8 +3,9 @@
   "version": "1.0.70",
   "description": "Use Claude Code without an Anthropics account and route it to another LLM provider",
   "bin": {
-    "ccr": "dist/cli.js",
-    "ccr-setup": "scripts/setup-config.js"
+    "ccr": "./dist/cli.js",
+    "ccr-test": "./scripts/ccr-test.js",
+    "ccr-keytest": "./scripts/ccr-keytest.ts"
   },
   "scripts": {
     "build": "esbuild src/cli.ts --bundle --platform=node --outfile=dist/cli.js --external:./package.json && esbuild scripts/ccr-test.ts --bundle --platform=node --outfile=scripts/ccr-test.js --external:./package.json && shx cp node_modules/tiktoken/tiktoken_bg.wasm dist/tiktoken_bg.wasm"
@@ -24,11 +25,11 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "esbuild": "^0.25.1",
     "fastify": "^5.4.0",
     "shx": "^0.4.0",
-    "typescript": "^5.8.2",
-    "@types/node": "^20.0.0"
+    "typescript": "^5.8.2"
   },
   "files": [
     "dist/",
