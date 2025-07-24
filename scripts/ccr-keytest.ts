@@ -1,6 +1,7 @@
 #!/usr/bin/env ts-node
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import readline from 'readline';
+import os from 'os';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 const GEMINI_MODEL = 'gemini-2.5-pro';
@@ -144,8 +145,12 @@ async function main() {
     }
   };
   if (proxyUrl) config.PROXY_URL = proxyUrl;
-  writeFileSync('valid-key-config.json', JSON.stringify(config, null, 2));
-  console.log(`\nValid keys written to valid-key-config.json. You can review and copy to config.json as needed.`);
+  const homeDir = os.homedir();
+  const ccrDir = `${homeDir}/.claude-code-router`;
+  if (!existsSync(ccrDir)) mkdirSync(ccrDir);
+  const keyFilePath = `${ccrDir}/valid-key-config.json`;
+  writeFileSync(keyFilePath, JSON.stringify(config, null, 2));
+  console.log(`\nValid keys written to ${keyFilePath}. You can review and copy to config.json as needed.`);
 }
 
 main(); 

@@ -101,6 +101,20 @@ nano ~/.claude-code-router/config.json
 vim ~/.claude-code-router/config.json
 # or
 code ~/.claude-code-router/config.json
+
+#### Test and Generate Valid Key Config
+
+To test your Gemini API keys and generate a config file with only valid keys, run:
+
+```bash
+npx ts-node scripts/ccr-keytest.ts
+```
+
+- The script will prompt you to paste your keys, test them, and output a config file.
+- The generated file will be saved to: `~/.claude-code-router/valid-key-config.json`
+- This ensures your keys are never written to the project directory or accidentally published.
+
+You can review and copy the valid keys from this file to your main `config.json` as needed.
 ```
 
 ### 3. Basic Configuration Example

@@ -99,6 +99,20 @@ nano ~/.claude-code-router/config.json
 vim ~/.claude-code-router/config.json
 # 或
 code ~/.claude-code-router/config.json
+
+#### 测试并生成可用 Key 配置
+
+如需批量测试 Gemini API Key 并生成仅包含可用 key 的配置文件，可运行：
+
+```bash
+npx ts-node scripts/ccr-keytest.ts
+```
+
+- 按提示粘贴你的 key，脚本会自动测试并输出配置文件。
+- 生成的文件将保存在：`~/.claude-code-router/valid-key-config.json`
+- 这样可避免 key 文件出现在项目目录，防止泄漏或误提交。
+
+你可以根据需要，将可用 key 从该文件复制到主配置 `config.json` 中。
 ```
 
 ### 3. 基本配置示例
