@@ -1,98 +1,77 @@
-import { existsSync, readFileSync } from "fs";
-import { PID_FILE } from "../constants";
-import { getApiKeyRotationStatus } from "./configProcessor";
 
-export const showStatus = () => {
-  const isRunning = existsSync(PID_FILE);
-  
-  if (isRunning) {
-    try {
-      const pid = parseInt(readFileSync(PID_FILE, "utf-8"));
-      console.log("✅ Service is running (PID:", pid, ")");
-      
-      // 显示API Key轮询状态
-      showApiKeyRotationStatus();
-    } catch (error) {
-      console.log("❌ Service status file is corrupted");
-    }
-  } else {
-    console.log("❌ Service is not running");
-  }
-};
+import { existsSync, readFileSync } from 'fs';
+import { CONFIG_FILE, PID_FILE, LOG_FILE } from '../constants';
+import { isServiceRunning, cleanupPidFile } from './processCheck';
+import { keyManagerService } from '../services/KeyManagerService';
+import { ApiKeyRecord, ApiKeyStatus } from '../services/KeyManagerService';
 
-/**
- * 显示API Key轮询状态
- */
-function showApiKeyRotationStatus(): void {
-  try {
-    const rotationStatus = getApiKeyRotationStatus();
-    
-    if (rotationStatus.length === 0) {
-      console.log("📊 API Key Rotation: Not configured");
-      return;
-    }
-    
-    console.log("\n📊 API Key Rotation Status:");
-    console.log("=" .repeat(60));
-    
-    rotationStatus.forEach(provider => {
-      console.log(`\n🔧 Provider: ${provider.provider}`);
-      console.log(`   Strategy: ${provider.strategy}`);
-      console.log(`   Total Keys: ${provider.totalKeys}`);
-      console.log(`   Available Keys: ${provider.availableKeys}`);
-      
-      if (provider.keyStatus && provider.keyStatus.length > 0) {
-        console.log("   Key Status:");
-        provider.keyStatus.forEach((keyStatus: any) => {
-          const status = keyStatus.isActive ? "✅" : "❌";
-          const failures = keyStatus.failures > 0 ? ` (${keyStatus.failures} failures)` : "";
-          console.log(`     ${status} ${keyStatus.key.substring(0, 8)}...${failures}`);
-        });
-      }
-    });
-    
-    console.log("\n" + "=" .repeat(60));
-  } catch (error) {
-    console.log("⚠️  Failed to get API key rotation status:", error);
-  }
+function formatTimestamp(timestamp: number): string {
+    if (timestamp === 0) return 'Never';
+    return new Date(timestamp).toLocaleString();
 }
 
-/**
- * 显示详细的API Key轮询状态
- */
-export const showDetailedRotationStatus = () => {
-  try {
-    const rotationStatus = getApiKeyRotationStatus();
-    
-    if (rotationStatus.length === 0) {
-      console.log("No API key rotation configured");
-      return;
+function getStatusSymbol(status: ApiKeyStatus): string {
+    switch(status) {
+        case 'active': return '✅';
+        case 'unused': return '🆕';
+        case 'failed': return '❌';
+        default: return '❓';
     }
-    
-    console.log("🔍 Detailed API Key Rotation Status");
-    console.log("=" .repeat(80));
-    
-    rotationStatus.forEach(provider => {
-      console.log(`\n📋 Provider: ${provider.provider}`);
-      console.log(`   Enabled: ${provider.enabled ? "Yes" : "No"}`);
-      console.log(`   Strategy: ${provider.strategy}`);
-      console.log(`   Total Keys: ${provider.totalKeys}`);
-      console.log(`   Available Keys: ${provider.availableKeys}`);
-      
-      if (provider.keyStatus && provider.keyStatus.length > 0) {
-        console.log("\n   Individual Key Status:");
-        provider.keyStatus.forEach((keyStatus: any, index: number) => {
-          console.log(`   ${index + 1}. ${keyStatus.key.substring(0, 12)}...`);
-          console.log(`      Active: ${keyStatus.isActive ? "Yes" : "No"}`);
-          console.log(`      Failures: ${keyStatus.failures}`);
-          console.log(`      Last Failure: ${keyStatus.lastFailureTime > 0 ? new Date(keyStatus.lastFailureTime).toLocaleString() : "Never"}`);
-          console.log(`      Last Used: ${keyStatus.lastUsedTime > 0 ? new Date(keyStatus.lastUsedTime).toLocaleString() : "Never"}`);
+}
+
+export function showStatus() {
+    console.log(`claude-code-router status`);
+    console.log('-------------------------');
+    console.log(`Config file: ${CONFIG_FILE}`);
+
+    if (!isServiceRunning()) {
+        console.log('Service status: 🔴 Stopped');
+        cleanupPidFile();
+        return;
+    }
+
+    try {
+        const pid = readFileSync(PID_FILE, 'utf-8');
+        console.log(`Service status: 🟢 Running (PID: ${pid})`);
+        console.log(`Log file: ${LOG_FILE}`);
+        // Since the service is running, the key manager should be initialized.
+        // We call the detailed status function directly.
+        showDetailedRotationStatus();
+    } catch (e) {
+        console.log('Service status: 🔴 Stopped (PID file not found)');
+        cleanupPidFile();
+    }
+}
+
+export function showDetailedRotationStatus() {
+    const rotationStatus = keyManagerService.getStatus();
+    const providers = Object.keys(rotationStatus);
+
+    if (providers.length === 0) {
+        console.log("\nKey rotation status is not available. Ensure providers and api_keys are configured in your config file and the service is running.");
+        return;
+    }
+
+    console.log("\n🔑 API Key Rotation Status:\n");
+
+    providers.forEach(providerName => {
+        const keys = rotationStatus[providerName];
+        const now = Date.now();
+        const availableKeys = keys.filter(k => k.status !== 'failed' || (now - k.lastFailedTimestamp > 5 * 60 * 1000));
+
+        console.log(`🔹 Provider: ${providerName}`);
+        console.log(`   Available/Total Keys: ${availableKeys.length}/${keys.length}`);
+        
+        keys.forEach(key => {
+            const statusSymbol = getStatusSymbol(key.status);
+            console.log(
+                `   ${statusSymbol} Key ...${key.key.slice(-4)} | ` +
+                `Status: ${key.status.padEnd(8)}| ` +
+                `Success: ${key.successCount} | ` +
+                `Failures: ${key.failureCount} | ` +
+                `Last Used: ${formatTimestamp(key.lastUsedTimestamp)}`
+            );
         });
-      }
+        console.log(''); // Add a blank line for readability
     });
-    
-    console.log("\n" + "=" .repeat(80));
-  } catch (error) {
-    console.log("Error getting detailed rotation status:", error);
-  }
-};
+}

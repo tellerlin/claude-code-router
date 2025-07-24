@@ -11,9 +11,8 @@ This is a fork of [musistudio/claude-code-router](https://github.com/musistudio/
 ### 🆕 New Features in This Fork
 
 - **API Key Rotation**: Support for multiple API keys with automatic rotation
-- **Multiple Rotation Strategies**: round_robin, random, weighted, least_used
-- **Smart Error Handling**: Automatic retry, failure counting, cooldown mechanism
-- **Status Monitoring**: Real-time monitoring of API key rotation status
+- **Smart Error Handling**: Automatic retry with the next available key, failure counting, and a cooldown mechanism to handle temporary outages.
+- **Status Monitoring**: Real-time monitoring of API key status via the `ccr status` and `ccr rotation` commands.
 - **Enhanced CLI**: Improved command-line interface with detailed status information
 - **Background Service**: Automatic service management with proper cleanup
 - **Comprehensive Testing**: Built-in testing for all API keys and models
@@ -36,10 +35,9 @@ This is a fork of [musistudio/claude-code-router](https://github.com/musistudio/
 -   **Plugin System**: Extend functionality with custom transformers.
 
 ### 🆕 New Features in This Fork
--   **API Key Rotation**: Support for multiple API keys with automatic rotation and load balancing
--   **Multiple Rotation Strategies**: round_robin, random, weighted, least_used
--   **Smart Error Handling**: Automatic retry, failure counting, cooldown mechanism
--   **Status Monitoring**: Real-time monitoring of API key rotation status via `ccr status` and `ccr rotation` commands
+- **API Key Rotation**: Automatically rotates through a list of API keys for higher availability.
+- **Smart Error Handling**: Automatically retries failed requests with the next available key, tracks failure counts, and implements a cooldown period for temporarily failing keys.
+- **Status Monitoring**: Real-time monitoring of each API key's status (active, unused, failed) via the `ccr status` command.
 -   **Enhanced Testing**: Comprehensive testing suite with `ccr test` command for all models and API keys
 -   **Background Service Management**: Proper service lifecycle with automatic startup and cleanup
 
@@ -208,80 +206,35 @@ ccr status
 ccr rotation
 ```
 
-The status commands show:
+The status command shows:
 - Service running status (PID)
-- API key rotation configuration
-- Individual key status (active/inactive)
-- Failure counts and last usage times
+- Individual key status (active, unused, failed)
+- Success and failure counts
+- Last usage times
 - Available vs total keys
 
 ## 🔄 API Key Rotation Feature
 
-Claude Code Router supports advanced API key rotation with multiple strategies and smart error handling.
+Claude Code Router supports a robust API key rotation system to enhance reliability and handle temporary service issues.
 
 ### Basic Rotation Configuration
+To use the rotation feature, simply provide an array of keys in your `config.json`. The router will handle the rest automatically.
+
 ```json
 {
   "name": "gemini",
   "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
   "api_keys": ["key1", "key2", "key3"],
-  "enable_rotation": true,
-  "rotation_strategy": "round_robin",
-  "retry_on_failure": true,
-  "max_retries": 3,
   "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
   "transformer": { "use": ["gemini"] }
 }
 ```
 
-### Advanced Rotation Configuration
-```json
-{
-  "name": "gemini",
-  "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
-  "api_keys": [
-    {
-      "key": "key1",
-      "weight": 2,
-      "maxFailures": 5,
-      "cooldownTime": 60000
-    },
-    {
-      "key": "key2",
-      "weight": 1,
-      "maxFailures": 3,
-      "cooldownTime": 30000
-    }
-  ],
-  "enable_rotation": true,
-  "rotation_strategy": "weighted",
-  "retry_on_failure": true,
-  "max_retries": 3,
-  "models": ["gemini-2.5-flash", "gemini-2.5-pro"],
-  "transformer": { "use": ["gemini"] }
-}
-```
-
-### Rotation Strategies
-
-- **`round_robin`** (default): Round-robin rotation, using each API Key in sequence
-- **`random`**: Random selection, suitable for high-concurrency scenarios
-- **`weighted`**: Weighted rotation, supporting different weights for API Keys
-- **`least_used`**: Least-used priority, selecting the least recently used Key
-
-### Configuration Parameters
-
-- **`api_keys`**: API Key list (string array or object array)
-- **`enable_rotation`**: Whether to enable rotation (default: true)
-- **`rotation_strategy`**: Rotation strategy (default: round_robin)
-- **`retry_on_failure`**: Whether to retry on failure (default: true)
-- **`max_retries`**: Maximum retry attempts (default: 3)
-
-#### API Key Object Configuration
-- **`key`**: API Key string
-- **`weight`**: Weight for weighted rotation (default: 1)
-- **`maxFailures`**: Maximum failure count before disabling the Key
-- **`cooldownTime`**: Cooldown time (milliseconds) after failure
+### How It Works
+- **Priority-Based Selection**: The router prioritizes keys in this order: `unused` > `active` (least recently used first) > `failed` (after a cooldown period).
+- **Automatic Retries**: If a request with one key fails, the router automatically tries the next available key (up to 3 retries).
+- **Failure Cooldown**: A key that fails 3 consecutive times is marked as `failed` and put into a 5-minute cooldown period before it can be retried.
+- **Status Monitoring**: Use the `ccr status` or `ccr rotation` command to see the real-time status of each key.
 
 ### Status Monitoring
 
@@ -297,22 +250,13 @@ ccr rotation
 
 Example output:
 ```
-🚀 Claude Code Router v1.0.68
-✅ Service is running (PID: 12345)
+🔑 API Key Rotation Status:
 
-📊 API Key Rotation Status:
-============================================================
-
-🔧 Provider: gemini
-   Strategy: round_robin
-   Total Keys: 3
-   Available Keys: 3
-   Key Status:
-     ✅ AIzaSyAV... (0 failures)
-     ✅ AIzaSyCf... (0 failures)
-     ✅ AIzaSyCd... (0 failures)
-
-============================================================
+🔹 Provider: gemini
+   Available/Total Keys: 3/3
+   ✅ Key ...-4g5h | Status: active   | Success: 10 | Failures: 0 | Last Used: 2023-10-27 10:30:15
+   🆕 Key ...-j2k3 | Status: unused   | Success: 0 | Failures: 0 | Last Used: Never
+   ❌ Key ...-9b1d | Status: failed   | Success: 2 | Failures: 3 | Last Used: 2023-10-27 10:25:01
 ```
 
 ## 🔧 Configuration Details

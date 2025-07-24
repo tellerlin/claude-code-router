@@ -15,7 +15,7 @@ import {
   isServiceRunning,
   savePid,
 } from "./utils/processCheck";
-import { CONFIG_FILE } from "./constants";
+import { keyManagerService } from "./services/KeyManagerService";
 
 // 声明全局变量
 declare var process: any;
@@ -54,6 +54,10 @@ async function run(options: RunOptions = {}) {
   await initializeClaudeConfig();
   await initDir();
   const processedConfig = await initConfig();
+  
+  // Initialize KeyManagerService with all providers and their keys
+  keyManagerService.initialize(processedConfig.providers);
+  
   let HOST = processedConfig.global.HOST;
 
   if (processedConfig.global.HOST && !processedConfig.global.APIKEY) {
@@ -87,17 +91,11 @@ async function run(options: RunOptions = {}) {
     ? parseInt(process.env.SERVICE_PORT)
     : port;
   
-  // 让 @musistudio/llms 直接从 jsonPath 读取原始配置，但添加 providers 到 initialConfig
+  // Let @musistudio/llms read original config, but pass providers to initialConfig
   const server = createServer({
     jsonPath: CONFIG_FILE,
     initialConfig: {
-      providers: processedConfig.providers.map((p: any) => ({
-        name: p.name,
-        api_base_url: p.api_base_url,
-        api_key: Array.isArray(p.api_keys) && p.api_keys.length > 0 ? p.api_keys[0] : '',
-        models: p.models,
-        transformer: p.transformer
-      })),
+      providers: processedConfig.providers, // Pass full provider config
       HOST: HOST,
       PORT: servicePort,
       LOG_FILE: join(
@@ -107,17 +105,18 @@ async function run(options: RunOptions = {}) {
       ),
     },
   });
-  server.addHook("preHandler", apiKeyAuth(processedConfig.global));
-  server.addHook("preHandler", async (req: any, reply: any) =>
-    router(req, reply, processedConfig)
-  );
+
+  // Register a single route to handle all proxied requests
+  server.app.post('/v1/messages', {
+    preHandler: apiKeyAuth(processedConfig.global),
+    handler: (req, reply) => router(req, reply, processedConfig, server.app._server)
+  });
   
   try {
     await server.start();
     console.log(`🚀 Claude Code Router service started successfully on ${HOST}:${servicePort}`);
     
-    // 服务启动成功，保持运行状态
-    // 移除 process.exit(0) 让服务持续运行
+    // The service is started and will continue to run
   } catch (error) {
     console.error("Failed to start service:", error);
     cleanupPidFile();

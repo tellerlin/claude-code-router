@@ -1,6 +1,6 @@
 {
   "name": "@tellerlin/claude-code-router",
-  "version": "1.0.70",
+  "version": "1.1.0",
   "description": "Use Claude Code without an Anthropics account and route it to another LLM provider",
   "bin": {
     "ccr": "./dist/cli.js",
@@ -25,7 +25,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.9",
     "esbuild": "^0.25.1",
     "fastify": "^5.4.0",
     "shx": "^0.4.0",
